@@ -8,6 +8,16 @@
             <label for="token">Token</label>
             <input type="text" class="form-control" id="token" placeholder="paste your bearer token here" >
         </div>
+         <div class="form-group">
+            <label for="appId">Select Blast Type</label>
+                <select id="appId" class="form-control" title="Blast Type">
+                    <option value="blastn" selected="true">blastn</option>
+                    <option value="blastp">blastp</option>
+                    <option value="blastx">blastx</option>
+                    <option value="tblastn">tblastn</option>
+                    <option value="tblastx">tblastx</option>
+                </select>        
+        </div>
         <div class="form-group">
             <label for="edit-sequence-input">Blast Input Sequence</label>
             <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
@@ -120,7 +130,7 @@
     </div><!-- end div submit -->
     <div class="job-monitor hidden">
         Job Status:<div class="well well-sm job-status"></div>
-        <div class="well job-output"></div>
+        Results:<div class="well job-output">Output will go here.</div>
     </div>  <!-- end div job-montior -->
 </div> <!-- end div class="science-app" data-app-name="package" -->
 <script type="text/javascript" src="scripts/app.js"></script>
