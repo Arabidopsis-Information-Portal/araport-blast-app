@@ -1,6 +1,7 @@
 {
-  "name": "package",
-  "version": "0.0.0",
-  "dependencies": {}
+  "name": "v9000",
+  "private": true,
+  "dependencies": {
+    "FileSaver.js": "Arabidopsis-Information-Portal/FileSaver.js"
+  }
 }
-

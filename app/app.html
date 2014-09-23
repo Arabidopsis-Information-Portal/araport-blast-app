@@ -1,13 +1,11 @@
-<link rel="stylesheet" href="styles/app.css" />
-<div class="science-app" data-app-name="package">
+<div class="science-app" data-app-name="new-araport-blast-app">
+<div class='my-stuff'>
   <!-- Agave.token, Agave.api.files -->
   <h1 class="page-header">Araport Blast+</h1>
+    <div class="alert alert-danger hidden blast-errors" role="alert"></div>
+    </div>  <!-- end div job-montior -->
     <div class="blast-submit">
       <form role="form" action="/aip/apps/blast" method="post" id="araport-apps-form" accept-charset="UTF-8">
-        <div class="form-group">
-            <label for="token">Token</label>
-            <input type="text" class="form-control" id="token" placeholder="paste your bearer token here" >
-        </div>
          <div class="form-group">
             <label for="appId">Select Blast Type</label>
                 <select id="appId" class="form-control" title="Blast Type">
@@ -125,12 +123,15 @@
                 </div>               
             </div><!-- end panel body -->             
         </fieldset>
-        <button class="btn btn-default form-submit">Run BlastN</button>
+        <button class="btn btn-default form-submit"><span class="glyphicon glyphicon-ok"></span> Run BlastN</button>
       </form>
     </div><!-- end div submit -->
     <div class="job-monitor hidden">
         Job Status:<div class="well well-sm job-status"></div>
+        <div class="job-buttons hidden"><button type="button" class="btn btn-default blast-download-button"><span class="glyphicon glyphicon-download-alt" ></span> Download Results</button><button type="button" class="btn btn-default blast-reload-button"><span class="glyphicon glyphicon-refresh" ></span> New Blast</button></div>
         Results:<div class="well job-output">Output will go here.</div>
     </div>  <!-- end div job-montior -->
-</div> <!-- end div class="science-app" data-app-name="package" -->
-<script type="text/javascript" src="scripts/app.js"></script>
+</div>
+
+
+</div> <!-- end div class="science-app" data-app-name="package" -->  

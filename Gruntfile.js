@@ -5,7 +5,7 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   var config = {
-    appName: 'package',
+    appName: 'v9000',
     app: 'app',
     dist: 'dist'
   };
@@ -16,22 +16,32 @@ module.exports = function(grunt) {
     config: config,
 
     watch: {
+      bower: {
+        files: ['bower.json'],
+        tasks: ['wiredep']
+      },
       gruntfile: {
         files: 'Gruntfile.js',
         tasks: ['jshint']
       },
-      scripts: {
+      js: {
         files: ['<%= config.app %>/scripts/{,*/}*.js'],
         tasks: ['jshint'],
         options: {
           livereload: true
         }
       },
+      jstest: {
+        files: ['test/spec/{,*/}*.js'],
+        tasks: ['test:watch']
+      },
       livereload: {
         files: [
           'index.html',
+          'lib/*.*',
           '<%= config.app %>/{,*/}*.html',
-          '<%= config.app %>/images/{,*/}*'
+          '<%= config.app %>/images/{,*/}*',
+          '.tmp/styles/{,*/}*.css'
         ],
         tasks: ['includes'],
         options: {
@@ -49,12 +59,28 @@ module.exports = function(grunt) {
         // Change this to '0.0.0.0' to access the server from outside
         hostname: 'localhost'
       },
+      dist: {
+        options: {
+          hostname: '0.0.0.0',
+          livereload: false,
+          middleware: function(connect) {
+            return [
+              connect.static('.tmp'),
+              connect().use('/lib', connect.static('lib')),
+              connect().use('/bower_components', connect.static('./bower_components')),
+              connect().use('/app', connect.static(config.app))
+            ];
+          }
+        }
+      },
       livereload: {
         options: {
           middleware: function(connect) {
             return [
               connect.static('.tmp'),
-              connect.static(config.app)
+              connect().use('/lib', connect.static('lib')),
+              connect().use('/bower_components', connect.static('./bower_components')),
+              connect().use('/app', connect.static(config.app))
             ];
           }
         }
@@ -64,7 +90,12 @@ module.exports = function(grunt) {
     // Empties folders to start fresh
     clean: {
       server: '.tmp',
-      dist: 'dist'
+      dist: {
+        files: [{
+          dot: true,
+          src: ['.tmp', '<%= config.dist %>/*', '!<%= config.dist %>/.git*']
+        }]
+      }
     },
 
     // Make sure code styles are up to par and there are no obvious mistakes
@@ -75,6 +106,7 @@ module.exports = function(grunt) {
       },
       all: [
         'Gruntfile.js',
+        'lib/*.js',
         '<%= config.app %>/scripts/{,*/}*.js',
         '!<%= config.app %>/scripts/vendor/*',
         'test/spec/{,*/}*.js'
@@ -90,6 +122,30 @@ module.exports = function(grunt) {
         options: {
           silent: true,
         }
+      }
+    },
+
+    // Add vendor prefixed styles
+    autoprefixer: {
+      options: {
+        browsers: ['last 1 version']
+      },
+      dist: {
+        files: [{
+          expand: true,
+          cwd: '.tmp/styles/',
+          src: '{,*/}*.css',
+          dest: '.tmp/styles/'
+        }]
+      }
+    },
+
+    // Automatically inject Bower components into the HTML file
+    wiredep: {
+      target: {
+        src: [
+          'index.html'
+        ]
       }
     },
 
@@ -117,11 +173,20 @@ module.exports = function(grunt) {
 
   grunt.registerTask('serve', function (target) {
     if (target === 'dist') {
-      return grunt.task.run(['build', 'connect:dist:keepalive']);
+      return grunt.task.run([
+        'clean:server',
+        'jshint',
+        'wiredep',
+        'includes',
+        'copy',
+        'connect:dist:keepalive'
+      ]);
     }
 
     grunt.task.run([
       'clean:server',
+      'jshint',
+      'wiredep',
       'includes',
       'copy',
       'connect:livereload',
@@ -142,6 +207,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('dist', [
     'clean:dist',
+    'jshint',
+    'wiredep',
     'inline'
   ]);
 
