@@ -50,7 +50,6 @@
     BLAST_CONFIG.errorStates    = ['KILLED', 'FAILED', 'STOPPED','ARCHIVING_FAILED'];
     BLAST_CONFIG.finishedStates = ['FINISHED'];
 
-    var AgaveFilesURL = 'https://api.araport.org/files/v2/media/system/';
     var BlastApp = {}; //info dumping ground
 
     //using date and time as an identifier. probably should switch this to a uuid or something   
@@ -69,9 +68,7 @@
                 console.log(results);
                 console.log('profile found username=' + results.obj.result.username); 
                 BlastApp.username = results.obj.result.username;
-                BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);
-                BlastApp.uploadPath = AgaveFilesURL + 'araport-storage-00/' + BlastApp.username + '/';
-                
+                BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);                
             }, function(){
                 console.log('failure?');
                 BlastApp.jobError('Could not find your profile information.');
@@ -83,7 +80,6 @@
     BlastApp.getDatabases = function(Agave) {
         if(BlastApp.databases) { return; }
         $('.nucleotides').html('Fetching available databases');     
-        //'araport-compute-00-storage/blast/index.json'
         Agave.api.files.download({'systemId':'araport-compute-00-storage','filePath':'blast/index.json'},function(json) {
             BlastApp.databases = JSON.parse(json.data).databases;
             console.log( BlastApp.databases );
@@ -113,7 +109,6 @@
     //Check the status of a job by jobId, react appropriately 
     BlastApp.checkJobStatus = function() {
         console.log('BlastApp.status = ' + BlastApp.status);
-        console.log('BlastApp.jobId='+ BlastApp.jobId);
         var Agave = window.Agave;
         if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
             $('.job-status').html('Checking...');
@@ -125,11 +120,11 @@
                     BlastApp.status = json.obj.result.status;
                     $('.job-status').html(BlastApp.status);
                     if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
-                        console.log('ok, here we go again because BlastApp.status =' + BlastApp.status);
+                        console.log('checking again due to BlastApp.status =' + BlastApp.status);
                         setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                     } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
                         console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
-                        BlastApp.jobError();
+                        BlastApp.jobError('Job status is ' + BlastApp.status);
                     } else if(BLAST_CONFIG.finishedStates.indexOf(BlastApp.status) >=0) {
                         BlastApp.jobFinished(json.obj.result);
                     } else {
@@ -155,7 +150,7 @@
     
     BlastApp.fetchResults = function () {
         var Agave = window.Agave;
-        Agave.api.files.download({'systemId':'araport-storage-00','filePath':BlastApp.outputFile},
+        Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':BlastApp.outputFile},
             function(output) {
                 console.log('hi! download of results ' + BlastApp.outputFile + ' totally worked');
                 console.log(output);
@@ -235,7 +230,6 @@
             //todo error saying you have to select at least one DB
         }
                       
-        console.log(BLAST_CONFIG);       
         
         //upload file from contents of input form text area
         var blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
@@ -244,24 +238,24 @@
         console.log('uploading ' + inputFileName);
         formData.append('fileToUpload',blob,inputFileName);
         
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', BlastApp.uploadPath, true);
-        xhr.setRequestHeader('Authorization', 'Bearer ' + Agave.token.accessToken);
-        xhr.timeout = 0;        
-        xhr.onload = function () {
-            
-            var parsedJSON = JSON.parse(xhr.response);
-            parsedJSON = parsedJSON.result;
-            
-            if (xhr.status === 200 || 202) {     //if the upload was good, then submit job
-                $('.job-status').html('Submitting job.');
+        Agave.api.files.importData(
+            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username, fileToUpload: blob, fileName: inputFileName},
+            {requestContentType: 'multipart/form-data'},
+            function(resp) {
+                //successful upload, but need to check for agave errors
+                if(resp.obj.status !== 'success') {
+                    BlastApp.jobError('Could not upload file. ' + resp.obj.message);
+                }
+                //actual successful upload.
+                //submit the job
+                 $('.job-status').html('Submitting job.');
                 BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
                 console.log('submitting:');
                 console.log(BLAST_CONFIG);
                 //submit the job               
                 Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)}, 
                     function(jobResponse) { //success
-                        console.log('JOB SUBMISSION DONE!');
+                        console.log('Job Submitted.');
                         console.log(jobResponse.obj);
                         $('.blast-submit').addClass('hidden');
                         $('.job-monitor').removeClass('hidden');
@@ -295,21 +289,13 @@
                         BlastApp.jobError('Job did not successfully submit. ' + err);
                     }
                 );
-          
-            } else {
-                console.log('Upload did not work.');
-                console.log(parsedJSON);
-                BlastApp.jobError('Input failed to upload.');
+      
+            }, function() {
+                BlastApp.jobError('Could not upload file.');
+                return false;
             }
-        };
-        xhr.onerror = function () {
-            //todo
-            console.log('booo! upload failed!' + xhr.status);
-            console.log(xhr);
-            BlastApp.jobError('Input failed to upload: ' + xhr.status);
-        };
-       
-        xhr.send(formData); //actually make the file upload call
+        );        
+        
     }); //end click submit
 
     //event handler for download button click
