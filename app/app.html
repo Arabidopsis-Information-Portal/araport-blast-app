@@ -1,7 +1,6 @@
 <div class="science-app" data-app-name="new-araport-blast-app">
 <div class='my-stuff'>
   <!-- Agave.token, Agave.api.files -->
-  <h1 class="page-header">Araport Blast+</h1>
     <div class="alert alert-danger hidden blast-errors" role="alert"></div>
     </div>  <!-- end div job-montior -->
     <div class="blast-submit">
@@ -14,7 +13,7 @@
                     <option value="blastx">blastx</option>
                     <option value="tblastn">tblastn</option>
                     <option value="tblastx">tblastx</option>
-                </select>        
+                </select>
         </div>
         <div class="form-group">
             <label for="edit-sequence-input">Blast Input Sequence</label>
@@ -32,7 +31,7 @@
                         <h4>Select Peptide DBs</h4>
                         <div class="form-group peptides"></div>
                     </div>
-                </div>    
+                </div>
             </div>
         </fieldset>
         <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
@@ -45,14 +44,14 @@
                  <div class="form-group">
                     <label for="gapopen">Cost to open a gap</label><p>Leave blank to use default value for algorithm</p>
                     <input type="text" id="gapopen" class="form-control"></input>
-                </div>           
+                </div>
                  <div class="form-group">
                     <label for="lowercase_masking">Use lower case filtering in query and subject sequence(s)</label>
                     <select id="lowercase_masking" class="form-control" title="Use lower case filtering in query and subject sequence(s)">
                         <option value="true" >On</option>
                         <option value="false" selected="TRUE">Off</option>
                     </select>
-                </div>           
+                </div>
                  <div class="form-group">
                     <label for="penalty">Penalty for a nucleotide mismatch</label><p>Penalty for a mismatch in the BLAST™ portion of run.</p>
                     <input type="text" id="penalty" class="form-control" ></input>
@@ -69,18 +68,18 @@
                         <option value="100">100</option>
                         <option value="1000">1000</option>
                     </select>
-                </div>           
+                </div>
                   <div class="form-group">
                     <label for="filter">Filter query sequence(s)</label><p>Filtering masks off segments of the query sequence that have low compositional complexity. DUST for blastn, SEG for others.</p>
                     <select id="filter" class="form-control">
                         <option value="true" selected="TRUE">On</option>
                         <option value="false">Off</option>
                     </select>
-                </div>             
+                </div>
                  <div class="form-group">
                     <label for="reward">Reward for a nucleotide match</label>
                     <input type="text" id="reward" class="form-control" ></input>
-                </div>            
+                </div>
                 <div class="form-group">
                     <label for="format">Format</label>
                     <select id="format" class="form-control" title="Format">
@@ -95,19 +94,19 @@
                 <div class="form-group">
                     <label for="wordsize">Word size for wordfinder algorithm</label><p>Leave blank to use default value for algorithm.</p>
                     <input type="text" id="wordsize" class="form-control"></input>
-                </div> 
+                </div>
                 <div class="form-group">
                     <label for="gapextend">Cost to extend a gap</label><p>Leave blank to use default value for algorithm</p>
                     <input type="text" id="gapextend" class="form-control" value="0"></input>
-                </div>            
+                </div>
                 <div class="form-group">
                     <label for="ungapped">Perform ungapped alignment only?</label>
                     <select id="ungapped" class="form-control">
                         <option value="true" selected="TRUE">On</option>
                         <option value="false">Off</option>
                     </select>
-                </div>   
-       
+                </div>
+
                 <div class="form-group">
                     <label for="matrix">Weight Matrix</label>
                     <select id="matrix" class="form-control" title="Weight Matrix">
@@ -120,8 +119,8 @@
                         <option value="pam70">pam70</option>
                         <option value="pam250">pam250</option>
                     </select>
-                </div>               
-            </div><!-- end panel body -->             
+                </div>
+            </div><!-- end panel body -->
         </fieldset>
         <button class="btn btn-default form-submit"><span class="glyphicon glyphicon-ok"></span> Run BlastN</button>
       </form>
@@ -134,4 +133,4 @@
 </div>
 
 
-</div> <!-- end div class="science-app" data-app-name="package" -->  
+</div> <!-- end div class="science-app" data-app-name="package" -->
