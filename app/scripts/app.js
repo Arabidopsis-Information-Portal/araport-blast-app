@@ -15,7 +15,7 @@
   
   //app template
   var BLAST_CONFIG = {
-        'name': 'blast-test-%DATESTAMP',
+        'name': 'blast-%DATESTAMP',
         'appId': 'ncbi-blastn-2.2.29u3',
         'queue': 'normal',
         'nodeCount': 1,
@@ -23,7 +23,7 @@
         'processorsPerNode': 1,
         'requestedTime': '00:30:00',
         'archive': true,
-        'archivePath': '%USERNAME/archive/jobs/blastn-test-%DATESTAMP',
+        'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP',
         'archiveSystem': 'araport-storage-00',
         /*
         'notifications': [{
@@ -217,7 +217,7 @@
         //get blast type and add to app instance
         BlastApp.blastType = $('#appId').val();
         BLAST_CONFIG.appId = blastTypes[BlastApp.blastType];
-        BlastApp.outputFile = BlastApp.username + '/archive/jobs/blastn-test-'+ BlastApp.now + '/' + BlastApp.blastType + '_out';
+        BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-'+ BlastApp.now + '/' + BlastApp.blastType + '_out';
         
         //get databases and add to app instance
         var dbs = '';
