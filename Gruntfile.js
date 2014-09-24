@@ -5,7 +5,7 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   var config = {
-    appName: 'v9000',
+    appName: 'araport-blast-plus',
     app: 'app',
     dist: 'dist'
   };

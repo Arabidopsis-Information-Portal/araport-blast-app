@@ -1,4 +1,4 @@
-# v9000
+# Araport Blast+
 
 An [AIP](http://www.araport.org) Science App created using [Yeoman](http://yeoman.io)
 and the [AIP science app generator](https://www.npmjs.org/package/generator-aip-science-app).

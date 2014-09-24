@@ -1,5 +1,5 @@
 {
-  "name": "v9000",
+  "name": "araport-blast-plus",
   "private": true,
   "dependencies": {
     "FileSaver.js": "Arabidopsis-Information-Portal/FileSaver.js"
