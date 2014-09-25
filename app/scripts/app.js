@@ -2,7 +2,6 @@
   'use strict';
   
   var appContext = $('[data-app-name="araport-blast-app"]');
-  console.log('Hello, I am ' + appContext);
 
   //the different blast types and their app IDs
   var blastTypes = {
@@ -81,7 +80,6 @@
     //go fetch the list of available databases from the blast/index.json file on araport-compute-00-storage
     BlastApp.getDatabases = function(Agave) {
         if(BlastApp.databases) { return; }
-        console.log('getDbs called');
         appContext.find('.nucleotides').html('Fetching available databases');     
         Agave.api.files.download({'systemId':'araport-compute-00-storage','filePath':'blast/index.json'},function(json) {
             BlastApp.databases = JSON.parse(json.data).databases;
@@ -98,7 +96,6 @@
                     }
                 }
             );
-            console.log(appContext.find('.nucleotides'));
             appContext.find('.nucleotides').html(nukes);
             appContext.find('.peptides').html(peps);
         }, function() {
@@ -116,12 +113,11 @@
             Agave.api.jobs.getStatus({'jobId':BlastApp.jobId},
                 //call success function
                 function(json) {
-                    console.log(json.obj);
                     //todo check json.obj.status === 'success'
                     BlastApp.status = json.obj.result.status;
                     appContext.find('.job-status').html(BlastApp.status);
                     if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
-                        console.log('checking again due to BlastApp.status =' + BlastApp.status);
+                        console.log('BlastApp.status = ' + BlastApp.status + '. Checking again.');
                         setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                     } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
                         console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
@@ -153,10 +149,10 @@
         var Agave = window.Agave;
         Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':BlastApp.outputFile},
             function(output) {
-                console.log('hi! download of results ' + BlastApp.outputFile + ' totally worked');
+                console.log('successful download of results ' + BlastApp.outputFile );
                 console.log(output);
                 BlastApp.outputData = output.data;
-                appContext.find('.job-buttons').removeClass('hidden');
+                appContext.find('.blast-job-buttons').removeClass('hidden');
                 if(BLAST_CONFIG.parameters.format !== 'HTML') {
                     appContext.find('.job-output').html('<pre>' + BlastApp.outputData + '</pre>');
                 } else {
@@ -251,13 +247,12 @@
                 //submit the job
                 appContext.find('.job-status').html('Submitting job.');
                 BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
-                console.log('submitting:');
+                console.log('submitting job:');
                 console.log(BLAST_CONFIG);
                 //submit the job               
                 Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)}, 
                     function(jobResponse) { //success
                         console.log('Job Submitted.');
-                        console.log(jobResponse.obj);
                         appContext.find('.blast-submit').addClass('hidden');
                         appContext.find('.job-monitor').removeClass('hidden');
                         if(jobResponse.obj.status === 'success') {
@@ -267,7 +262,7 @@
                             BlastApp.status = jobResponse.obj.result.status;
                             //is the job done? (unlikely)
                             if(BlastApp.status === 'FINISHED') {
-                                console.log('job immediately finished, yay!');
+                                console.log('job immediately finished');
                                 BlastApp.jobFinished(jobResponse.obj.result);
                             } else { //more likely we need to poll the status   
                                 BlastApp.status = jobResponse.obj.result.status;
@@ -287,7 +282,7 @@
                         //agave.api failed
                         console.log('Job did not successfully submit.');
                         console.log(err);
-                        BlastApp.jobError('Job did not successfully submit. ' + err);
+                        BlastApp.jobError('Job did not successfully submit.');
                     }
                 );
       
@@ -314,6 +309,7 @@
   });
   
   /* reload button */
+  //todo - this needs to not just reload the page to play nice in multi-app environment
   appContext.find('.blast-reload-button').click(function(){
     location.reload();
   });
