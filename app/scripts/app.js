@@ -70,8 +70,8 @@
                 }
                 BlastApp.username = results.obj.result.username;
                 BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);                
-            }, function(){
-                console.log('Could not find profile info.');
+            }, function(err){
+                console.log('Could not find profile info.', err);
                 BlastApp.jobError('Could not find your profile information.');
             }
         );

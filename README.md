@@ -1,11 +1,11 @@
 # Araport Blast+
 
-An [AIP](http://www.araport.org) Science App created using [Yeoman](http://yeoman.io)
+An [AIP/Araport.org](http://www.araport.org) Science App created using [Yeoman](http://yeoman.io)
 and the [AIP science app generator](https://www.npmjs.org/package/generator-aip-science-app).
 
 ## Runs {t}blast{p|x|n} on Araport's Cyberinfrastructure
 
-Runs any of the above blast types against a set of databases. 
+Runs any of the above blast types against a set of databases. Uses [NCBI Blast](http://blast.ncbi.nlm.nih.gov/) via a docker container. Code for the docker container can be found [here](https://github.com/Arabidopsis-Information-Portal/aip-agave-apps).
 
 
 ## Agave APIs Used
