@@ -101,6 +101,7 @@
         }, function() {
             console.log('Failed to find list of available databases.');
             appContext.find('.nucleotides').html('Unable to find available databases!');
+            BlastApp.jobError('Unable to find available databases.');
         });
     }; 
      
@@ -160,7 +161,7 @@
                 }
             },
             function(err) {
-                console.log('oh no, could not download the results file!');
+                console.log('Could not download the results file!');
                 //todo error handling here
                 BlastApp.jobError('Could not get resulting output file. ' + err);
             }
@@ -183,9 +184,9 @@
     };
 
     //UI show errors to user
-    //!!!TODO better. Add obj as well as string?
+    //!!!TODO improve error handling
     BlastApp.jobError = function(error) {
-        console.log('Boo! Job is in an error state!');
+        console.log('Boo! Job is in an error state!', error);
         appContext.find('.blast-errors').html('<h3>Blast encountered an error</h3><p>' + error + '</p>');
         appContext.find('.blast-errors').removeClass('hidden');
     };    
@@ -225,6 +226,12 @@
             BLAST_CONFIG.parameters.database = dbs;
         } else {
             //todo error saying you have to select at least one DB
+            $('.databases-panel').addClass('text-danger');
+            appContext.find('.blast-submit').removeClass('hidden');
+            appContext.find('.job-monitor').addClass('hidden');
+            BlastApp.jobError('You must select at least one database.');
+            $(window).scrollTop(0, 'slow');
+            return false;
         }
                       
         
@@ -247,8 +254,7 @@
                 //submit the job
                 appContext.find('.job-status').html('Submitting job.');
                 BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
-                console.log('submitting job:');
-                console.log(BLAST_CONFIG);
+                console.log('submitting job:', BLAST_CONFIG);
                 //submit the job               
                 Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)}, 
                     function(jobResponse) { //success
@@ -272,17 +278,15 @@
                                 }
                             }
                         } else {
-                            console.log('Job did not successfully submit.');
-                            console.log(jobResponse.data.message);
+                            console.log('Job did not successfully submit.', jobResponse.data.message);
                             //todo better error handling here
                             BlastApp.jobError('Job did not successfully submit. ' + jobResponse.data.message);
                         }
                     } , 
                     function(err) { //fail
                         //agave.api failed
-                        console.log('Job did not successfully submit.');
-                        console.log(err);
-                        BlastApp.jobError('Job did not successfully submit.');
+                        console.log('Job did not successfully submit.', err);
+                        BlastApp.jobError('Job did not successfully submit.', err);
                     }
                 );
       
