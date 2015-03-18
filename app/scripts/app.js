@@ -1,17 +1,17 @@
 (function(window, $, undefined) {
   'use strict';
-  
+
   var appContext = $('[data-app-name="araport-blast-app"]');
 
   //the different blast types and their app IDs
   var blastTypes = {
-    'blastn' : 'ncbi-blastn-2.2.29u5',
-    'blastp':'ncbi-blastp-2.2.29u3',
-    'blastx':'ncbi-blastx-2.2.29u3',
-    'tblastn':'ncbi-tblastn-2.2.29u3',
-    'tblastx':'ncbi-tblastx-2.2.29u3',
+    'blastn' : 'ncbi-blastn-2.2.29u6',
+    'blastp':'ncbi-blastp-2.2.29u4',
+    'blastx':'ncbi-blastx-2.2.29u4',
+    'tblastn':'ncbi-tblastn-2.2.29u5',
+    'tblastx':'ncbi-tblastx-2.2.29u4',
   };
-  
+
   //app template
   var BLAST_CONFIG = {
         'name': 'blast-%DATESTAMP',
@@ -51,7 +51,7 @@
 
     var BlastApp = {}; //info dumping ground
 
-    //using date and time as an identifier. probably should switch this to a uuid or something   
+    //using date and time as an identifier. probably should switch this to a uuid or something
     if (!Date.now) {
         Date.now = function() { return new Date().getTime(); };
     }
@@ -63,24 +63,24 @@
     //get the user's profile info, mostly for the username
     BlastApp.getProfile = function(Agave) {
         Agave.api.profiles.me(null,
-            function(results) { 
+            function(results) {
                 console.log('Hi, ' + results.obj.result.username + '! Welcome to the Araport Blast App!');
                 if(results.obj.status !== 'success') {
                     BlastApp.jobError('Could not find your profile information.');
                 }
                 BlastApp.username = results.obj.result.username;
-                BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);                
+                BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);
             }, function(err){
                 console.log('Could not find profile info.', err);
                 BlastApp.jobError('Could not find your profile information.');
             }
         );
-    }; 
- 
+    };
+
     //go fetch the list of available databases from the blast/index.json file on araport-compute-00-storage
     BlastApp.getDatabases = function(Agave) {
         if(BlastApp.databases) { return; }
-        appContext.find('.nucleotides').html('Fetching available databases');     
+        appContext.find('.nucleotides').html('Fetching available databases');
         Agave.api.files.download({'systemId':'araport-compute-00-storage','filePath':'blast/index.json'},function(json) {
             BlastApp.databases = JSON.parse(json.data).databases;
             //todo - check for empty databases response
@@ -103,9 +103,9 @@
             appContext.find('.nucleotides').html('Unable to find available databases!');
             BlastApp.jobError('Unable to find available databases.');
         });
-    }; 
-     
-    //Check the status of a job by jobId, react appropriately 
+    };
+
+    //Check the status of a job by jobId, react appropriately
     BlastApp.checkJobStatus = function() {
         console.log('BlastApp.status = ' + BlastApp.status);
         var Agave = window.Agave;
@@ -126,10 +126,10 @@
                     } else if(BLAST_CONFIG.finishedStates.indexOf(BlastApp.status) >=0) {
                         BlastApp.jobFinished(json.obj.result);
                     } else {
-                        console.log('unknown job state! =' + BlastApp.status); 
+                        console.log('unknown job state! =' + BlastApp.status);
                     }
-                    
-                }, 
+
+                },
                 //call err function
                 function() {
                     BlastApp.jobError('Could not fetch job status.');
@@ -145,7 +145,7 @@
         //now go get the output file and stuff it into the page
         BlastApp.fetchResults();
     };
-    
+
     BlastApp.fetchResults = function () {
         var Agave = window.Agave;
         Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':BlastApp.outputFile},
@@ -165,9 +165,9 @@
                 //todo error handling here
                 BlastApp.jobError('Could not get resulting output file. ' + err);
             }
-        );    
+        );
     };
-    
+
     BlastApp.downloadResults = function() {
         try {
             var isFileSaverSupported = !!new Blob();
@@ -189,12 +189,12 @@
         console.log('Boo! Job is in an error state!', error);
         appContext.find('.blast-errors').html('<h3>Blast encountered an error</h3><p>' + error + '</p>');
         appContext.find('.blast-errors').removeClass('hidden');
-    };    
-        
+    };
+
     //on form change add class to form element to pick out and add to app description
     appContext.find('form').change(function (event) {
         $(event.target).addClass('form-changed');
-    });    
+    });
 
     //submit form
     appContext.find('.form-submit').click(function (event) {
@@ -204,19 +204,19 @@
         appContext.find('.job-monitor').removeClass('hidden');
         appContext.find('.job-status').html('Uploading data.');
         var Agave = window.Agave;
-        
+
         //grab changed advanced options
         var changedAdvOptions = appContext.find('.advanced-blast-options').find('.form-changed');
         for(var i =0; i < changedAdvOptions.length; i++) {
           console.log(changedAdvOptions[i].id + ' = ' + changedAdvOptions[i].value);
           BLAST_CONFIG.parameters[changedAdvOptions[i].id] = changedAdvOptions[i].value;
         }
-        
+
         //get blast type and add to app instance
         BlastApp.blastType = appContext.find('#appId').val();
         BLAST_CONFIG.appId = blastTypes[BlastApp.blastType];
         BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-'+ BlastApp.now + '/' + BlastApp.blastType + '_out';
-        
+
         //get databases and add to app instance
         var dbs = '';
         appContext.find('.blast-database:checked').each(function(){
@@ -233,15 +233,15 @@
             $(window).scrollTop(0, 'slow');
             return false;
         }
-                      
-        
+
+
         //upload file from contents of input form text area
         var blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
         var formData = new FormData();
         var inputFileName = BlastApp.now+'.txt';
         console.log('uploading ' + inputFileName);
         formData.append('fileToUpload',blob,inputFileName);
-        
+
         Agave.api.files.importData(
             {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username, fileToUpload: blob, fileName: inputFileName},
             {requestContentType: 'multipart/form-data'},
@@ -255,14 +255,14 @@
                 appContext.find('.job-status').html('Submitting job.');
                 BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
                 console.log('submitting job:', BLAST_CONFIG);
-                //submit the job               
-                Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)}, 
+                //submit the job
+                Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
                     function(jobResponse) { //success
                         console.log('Job Submitted.');
                         appContext.find('.blast-submit').addClass('hidden');
                         appContext.find('.job-monitor').removeClass('hidden');
                         if(jobResponse.obj.status === 'success') {
-                    
+
                             //job successfully submitted, find out the status
                             BlastApp.jobId = jobResponse.obj.result.id;
                             BlastApp.status = jobResponse.obj.result.status;
@@ -270,7 +270,7 @@
                             if(BlastApp.status === 'FINISHED') {
                                 console.log('job immediately finished');
                                 BlastApp.jobFinished(jobResponse.obj.result);
-                            } else { //more likely we need to poll the status   
+                            } else { //more likely we need to poll the status
                                 BlastApp.status = jobResponse.obj.result.status;
                                 appContext.find('.job-status').html('Job Status is ' + BlastApp.status);
                                 if((BlastApp.status === 'PENDING')) {
@@ -282,27 +282,27 @@
                             //todo better error handling here
                             BlastApp.jobError('Job did not successfully submit. ' + jobResponse.data.message);
                         }
-                    } , 
+                    } ,
                     function(err) { //fail
                         //agave.api failed
                         console.log('Job did not successfully submit.', err);
                         BlastApp.jobError('Job did not successfully submit.', err);
                     }
                 );
-      
+
             }, function() {
                 BlastApp.jobError('Could not upload file.');
                 return false;
             }
-        );        
-        
+        );
+
     }); //end click submit
 
     //event handler for download button click
     appContext.find('.blast-download-button').click( function() {
         BlastApp.downloadResults();
     });
-    
+
   /* Initialize Agave */
   window.addEventListener('Agave::ready', function() {
     //var Agave, help, helpItem, helpDetail, methods, methodDetail;
@@ -311,7 +311,7 @@
     BlastApp.getProfile(Agave); //get the user info like username
     BlastApp.getDatabases(Agave); //load the Databases
   });
-  
+
   /* reload button */
   //todo - this needs to not just reload the page to play nice in multi-app environment
   appContext.find('.blast-reload-button').click(function(){
