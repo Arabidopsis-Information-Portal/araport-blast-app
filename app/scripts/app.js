@@ -6,7 +6,7 @@
   //the different blast types and their app IDs
   var blastTypes = {
     'blastn' : 'ncbi-blastn-2.2.29u6',
-    'blastp':'ncbi-blastp-2.2.29u4',
+    'blastp':'ncbi-blastp-2.2.29u5',
     'blastx':'ncbi-blastx-2.2.29u4',
     'tblastn':'ncbi-tblastn-2.2.29u5',
     'tblastx':'ncbi-tblastx-2.2.29u4',
