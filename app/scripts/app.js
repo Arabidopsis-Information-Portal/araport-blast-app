@@ -1,3 +1,6 @@
+/*eslint-env browser, jquery, node*/
+/*global undefined*/
+/*eslint quotes:0, key-spacing:0, no-multi-spaces:0, comma-spacing:0, space-infix-ops:0, no-underscore-dangle:0, no-loop-func:1, eqeqeq:1, no-trailing-spaces:1*/
 (function(window, $, undefined) {
   'use strict';
 
@@ -60,6 +63,126 @@
     BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now);
     BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
 
+    /* PRIVATE FUNCTIONS */
+    var _updateStatusIcon = function(status){
+        var ppc = appContext.find('.job-status .blast-job-status-icon');
+        ppc.removeClass('glyphicon-remove glyphicon-ok glyphicon-refresh blast-reload-icon');
+        switch(status){
+            case "pending":
+                ppc.addClass('glyphicon-refresh blast-reload-icon');
+                break;
+            case "error":
+                ppc.addClass('glyphicon-remove');
+                break;
+            case "success":
+                ppc.addClass('glyphicon-ok');
+                break;
+        }
+    };
+
+    var _checkJobListStatus = function(){
+        var tbody = appContext.find('.blast-job-history-content table tbody')[0];
+        var trs = tbody.rows;
+        var tr, status, id, newStatus, td, icon, cnt;
+        var sf = function(response){
+                        var data = JSON.parse(response.data);
+                        if(data.status === "success"){
+                            newStatus = data.result.status;
+                            var tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
+                            var td = $(tr.find("td")[0]);
+                            if(BLAST_CONFIG.errorStates.indexOf(newStatus) >= 0) {
+                                icon = td.find('.job-list-icon');
+                                icon.removeClass('glyphicon-refresh blast-reload-icon');
+                                icon.addClass('glyphicon-remove');
+                                icon.attr('style', 'color:red;');
+                                tr.attr('data-status', newStatus);
+                                td.find('.job-list-status').text(newStatus);
+                            }else if(BLAST_CONFIG.finishedStates.indexOf(newStatus) >= 0) {
+                                icon = td.find('.job-list-icon');
+                                icon.removeClass('glyphicon-ok blast-reload-icon');
+                                icon.addClass('glyphicon-ok');
+                                icon.attr('style', 'color:green;');
+                                tr.attr('data-status', newStatus);
+                                td.find('.job-list-status').text(newStatus);
+                            }else if(BLAST_CONFIG.runningStates.indexOf(newStatus) >= 0) {
+                                tr.attr('data-status', newStatus);
+                                td.find('.job-list-status').text(newStatus);
+                            }
+                        }
+                    };
+        var ef = function(){
+                        if(console){
+                            console.log("Error updating status on the jobId: " + id);
+                        }
+                    };
+        cnt = 0;
+        for(var i = 0; i < trs.length; i++){
+            tr = trs[i];
+            status = tr.getAttribute('data-status');
+            id = tr.getAttribute('data-id');
+            if(BLAST_CONFIG.runningStates.indexOf(status) >= 0) {
+                cnt++;
+                td = $(tr.querySelector("td"));
+                window.Agave.api.jobs.getStatus({"jobId":id},
+                    sf,
+                    ef);
+            }
+        }
+        if(cnt == 0){
+            clearInterval(BlastApp._jobListChecker);
+
+        }
+    };
+
+    var _showTooltip = function(){
+        var id = this.getAttribute("data-id");
+        var span = $(".blast-history-meta span#" + id);
+        if ( span.hasClass("blast-hidden") ){
+            $(".blast-history-meta span").addClass("blast-hidden");
+            span.removeClass("blast-hidden");
+            var tr = $(this);
+            span.offset({top: tr.offset().top - span.height() - (tr.height() / 2), left:50});
+        }else{
+            $(".blast-history-meta span").addClass("blast-hidden");
+            span.addClass("blast-hidden");
+        }
+    };
+
+    var _downloadResults = function(archive){
+        if(typeof archive !== 'undefined'){
+            var Agave = window.Agave;
+            var outputData;
+            Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':archive},
+                function(output) {
+                    console.log(output);
+                    outputData = output.data;
+                    console.log(outputData);
+                    try {
+                        var isFileSaverSupported = !!new Blob();
+                        if(!isFileSaverSupported) { 
+                            BlastApp.jobError('Sorry, your browser does not support this feature. Please upgrade to a modern browser.'); }
+                    } catch (e) {
+                        BlastApp.jobError('Sorry, your browser does not support this. Please upgrade to a modern browser.');
+                        return;
+                    }
+                    if(typeof outputData === 'undefined') {
+                        BlastApp.jobError('Could not download data.');
+                    }else{
+                        var paths = archive.split("/");
+                        var fileName = paths[paths.length-1] + '_' + paths[paths.length-2].split('-')[1] + '_out.' + BLAST_CONFIG.parameters.format;
+                        window.saveAs(new Blob([outputData]), fileName);
+                    }
+                },
+                function(err) {
+                    console.log('Could not download the results file!');
+                    //todo error handling here
+                    BlastApp.jobError('Could not get resulting output file. ' + err);
+                }
+            );
+        }
+    };
+    /* END OF PRIVATE FUNCTIONS */
+
     //get the user's profile info, mostly for the username
     BlastApp.getProfile = function(Agave) {
         Agave.api.profiles.me(null,
@@ -80,12 +203,12 @@
     //go fetch the list of available databases from the blast/index.json file on araport-compute-00-storage
     BlastApp.getDatabases = function(Agave) {
         if(BlastApp.databases) { return; }
-        appContext.find('.nucleotides').html('Fetching available databases');
+        appContext.find('.nucleotides').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
         Agave.api.files.download({'systemId':'araport-compute-00-storage','filePath':'blast/index.json'},function(json) {
             BlastApp.databases = JSON.parse(json.data).databases;
             //todo - check for empty databases response
             var nukes = '';
-            var peps  = '';
+            var peps = '';
             BlastApp.databases.forEach(
                 function(el) {
                     var dbEl = '<div class="checkbox"><label><input type="checkbox" class="blast-database" value="'+el.filename+'">'+el.label+'</label></div>';
@@ -110,20 +233,22 @@
         console.log('BlastApp.status = ' + BlastApp.status);
         var Agave = window.Agave;
         if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
-            appContext.find('.job-status').html('Checking...');
-            Agave.api.jobs.getStatus({'jobId':BlastApp.jobId},
+            //appContext.find('.job-status').html('Checking...');
+            Agave.api.jobs.getStatus({'jobId' : BlastApp.jobId},
                 //call success function
                 function(json) {
                     //todo check json.obj.status === 'success'
                     BlastApp.status = json.obj.result.status;
-                    appContext.find('.job-status').html(BlastApp.status);
+                    appContext.find('.job-status .job-status-message').html(BlastApp.status);
                     if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
                         console.log('BlastApp.status = ' + BlastApp.status + '. Checking again.');
                         setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                     } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
                         console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
+                        _updateStatusIcon("error");
                         BlastApp.jobError('Job status is ' + BlastApp.status);
                     } else if(BLAST_CONFIG.finishedStates.indexOf(BlastApp.status) >=0) {
+                        _updateStatusIcon("success");
                         BlastApp.jobFinished(json.obj.result);
                     } else {
                         console.log('unknown job state! =' + BlastApp.status);
@@ -176,7 +301,7 @@
             BlastApp.jobError('Sorry, your browser does not support this. Please upgrade to a modern browser.');
             return;
         }
-        if(! BlastApp.outputData) {
+        if(!BlastApp.outputData) {
             BlastApp.jobError('Could not download data.');
         }
         var fileName = BlastApp.blastType + '_' + BlastApp.now + '_out.' + BLAST_CONFIG.parameters.format;
@@ -191,6 +316,74 @@
         appContext.find('.blast-errors').removeClass('hidden');
     };
 
+    //Retrieve a list of user's jobs. Will sort by status
+    BlastApp.getJobList = function(){
+        window.Agave.api.jobs.list(
+            null,
+            function(result){
+                var data = JSON.parse(result.data);
+                if(data.status === 'success'){
+                    var jhc = appContext.find('.blast-job-history-content table tbody');
+                    jhc.html("");
+                    var jhm = appContext.find('.blast-history-meta');
+                    var job, icon, cnt, ds, de, span;
+                    cnt = 0;
+                    for(var i in data.result){
+                        job = data.result[i];
+                        if(job.appId.indexOf("ncbi-blast") == 0){
+                            //count
+                            cnt++;
+                            //if more than ten, break.
+                            if (cnt > 10) { break; }
+                            //Print info
+                            var archiveUrl = job._links.archiveData.href;
+                            archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
+                            var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
+                            //var archive = archiveUrl + '/' + job.name + '.out';
+                            ds = new Date(job.created);
+                            de = new Date(job.endTime);
+                            if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
+                                icon = "<span class='glyphicon glyphicon-refresh blast-reload-icon'></span>";
+                            } else if(BLAST_CONFIG.errorStates.indexOf(job.status) >= 0) {
+                                icon = "<span class='glyphicon glyphicon-remove' style='color:red'></span>";
+                            } else if(BLAST_CONFIG.finishedStates.indexOf(job.status) >=0) {
+                                icon = "<span class='glyphicon glyphicon-ok' style='color:green'></span>";
+                            }
+                            jhc.append($("<tr data-status=" + job.status + " data-id=" + job.id +">" +
+                                "<td><span class='job-list-icon'>" + icon + "</span> " +
+                                     "<span class='job-list-status'>" + job.status + "</san></td>" +
+                                "<td>" + job.appId + "</td>" +
+                                "<td>" + (ds.getMonth() + 1) + "/" + ds.getDate() + "/" 
+                                    + ds.getFullYear() + " " + ds.getHours() + ":" + ds.getMinutes() +  "</td>" +
+                                "<td>" + (de.getMonth() + 1) + "/" + de.getDate() + "/" 
+                                    + de.getFullYear() + " " + de.getHours() + ":" + de.getMinutes() +  "</td>" +
+                               "<td>" + job.name + "</td>" +
+                                "</tr>").click(_showTooltip));
+                            span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip\">" +
+                                "<ul><li><b>ExecutionSystem: </b></li>" + 
+                                "</li>" + job.executionSystem + "</li>" +
+                                "<li><b>Job Id: </b></li>" + 
+                                "<li>" + job.id + "</li>" +
+                                "<li class=\"blast-history-download\"></li>" +
+                                "</span>");
+                            jhm.append(span);
+                            var a = $("<a href=\"" + archive  + "\">Download Results</a>");
+                            span.find(".blast-history-download").append(a);
+                            a.click(function(e){
+                                e.preventDefault(); 
+                                _downloadResults(this.getAttribute("href")); }
+                                );
+                        }
+                    }
+                }
+            },
+            function(){
+                BlastApp.jobError('Couldn\'t retrieve job list. Please try again later');
+            }
+        );
+        BlastApp._jobListChecker = setInterval(_checkJobListStatus, 5000);
+    };
+
     //on form change add class to form element to pick out and add to app description
     appContext.find('form').change(function (event) {
         $(event.target).addClass('form-changed');
@@ -199,10 +392,11 @@
     //submit form
     appContext.find('.form-submit').click(function (event) {
         event.preventDefault();//stop form submission
+        clearInterval(BlastApp._jobListChecker);
         appContext.find('.blast-errors').addClass('hidden');
         appContext.find('.blast-submit').addClass('hidden');
         appContext.find('.job-monitor').removeClass('hidden');
-        appContext.find('.job-status').html('Uploading data.');
+        appContext.find('.job-status .job-status-message').html('Uploading data.');
         var Agave = window.Agave;
 
         //grab changed advanced options
@@ -252,7 +446,7 @@
                 }
                 //actual successful upload.
                 //submit the job
-                appContext.find('.job-status').html('Submitting job.');
+                appContext.find('.job-status .job-status-message').html('Submitting job.');
                 BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
                 console.log('submitting job:', BLAST_CONFIG);
                 //submit the job
@@ -269,14 +463,17 @@
                             //is the job done? (unlikely)
                             if(BlastApp.status === 'FINISHED') {
                                 console.log('job immediately finished');
+                                _updateStatusIcon("success");
                                 BlastApp.jobFinished(jobResponse.obj.result);
                             } else { //more likely we need to poll the status
                                 BlastApp.status = jobResponse.obj.result.status;
-                                appContext.find('.job-status').html('Job Status is ' + BlastApp.status);
+                                appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
                                 if((BlastApp.status === 'PENDING')) {
+                                    _updateStatusIcon("pending");
                                     setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                                 }
                             }
+                            BlastApp.getJobList();
                         } else {
                             console.log('Job did not successfully submit.', jobResponse.data.message);
                             //todo better error handling here
@@ -297,7 +494,6 @@
         );
 
     }); //end click submit
-
     //event handler for download button click
     appContext.find('.blast-download-button').click( function() {
         BlastApp.downloadResults();
@@ -310,6 +506,7 @@
     Agave = window.Agave;
     BlastApp.getProfile(Agave); //get the user info like username
     BlastApp.getDatabases(Agave); //load the Databases
+    BlastApp.getJobList();
   });
 
   /* reload button */

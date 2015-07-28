@@ -4,6 +4,34 @@
     <div class="alert alert-danger hidden blast-errors" role="alert"></div>
   </div>
   <!-- end div job-montior -->
+  <div class="blast-history-wrapper">
+      <div class="panel panel-default blast-job-history-panel panel-info">
+            <div class="panel-title panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".job-history">
+            Job History
+            </div>
+            <div class="panel-body job-history collapse">
+                <div class="blast-job-history-content">
+                    <div class="table-responsive">
+                        <span class="blast-history-message"></span>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Status:</th>
+                                    <th>appId: </th>
+                                    <th>Created: </th>
+                                    <th>End Time: </th>
+                                    <th>Name: </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="blast-history-meta"></div>
+                </div>
+            </div>
+        </div>
+      </div>
   <div class="blast-submit">
     <form role="form" action="/aip/apps/blast" method="post" id="araport-apps-form" accept-charset="UTF-8">
       <div class="form-group">
@@ -36,7 +64,7 @@
         </div>
       </fieldset>
       <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
-        <div class="panel-title fieldset-legend panel-heading" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
         <div class="panel-body advanced-options-panel collapse">
           <div class="form-group">
             <label for="max_target_seqs">Maximum number of aligned sequences to keep</label>
@@ -142,11 +170,11 @@
       </fieldset>
       <button class="btn btn-primary form-submit"><span class="glyphicon glyphicon-ok"></span> Run Blast</button>
     </form>
-  </div>
   <!-- end div submit -->
+  </div>
   <div class="job-monitor hidden">
     Job Status:
-    <div class="well well-sm job-status"></div>
+    <div class="well well-sm job-status"><span class="blast-job-status-icon glyphicon"></span><span class="job-status-message"></span></div>
     <div class="blast-job-buttons hidden">
       <button type="button" class="btn btn-default blast-download-button"><span class="glyphicon glyphicon-download-alt"></span> Download Results</button>
       <button type="button" class="btn btn-default blast-reload-button"><span class="glyphicon glyphicon-refresh"></span> New Blast</button>
