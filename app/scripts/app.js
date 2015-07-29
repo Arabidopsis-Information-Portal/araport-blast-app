@@ -1,5 +1,4 @@
-/*eslint-env browser, jquery, node*/
-/*global undefined*/
+/*eslint-env browser, jquery, node*/ /*global undefined*/
 /*eslint quotes:0, key-spacing:0, no-multi-spaces:0, comma-spacing:0, space-infix-ops:0, no-underscore-dangle:0, no-loop-func:1, eqeqeq:1, no-trailing-spaces:1*/
 (function(window, $, undefined) {
   'use strict';
@@ -52,16 +51,7 @@
     BLAST_CONFIG.errorStates    = ['KILLED', 'FAILED', 'STOPPED','ARCHIVING_FAILED'];
     BLAST_CONFIG.finishedStates = ['FINISHED'];
 
-    var BlastApp = {}; //info dumping ground
-
-    //using date and time as an identifier. probably should switch this to a uuid or something
-    if (!Date.now) {
-        Date.now = function() { return new Date().getTime(); };
-    }
-    var now = Date.now();
-    BlastApp.now = now;
-    BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now);
-    BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
+    var BlastApp = {}; //info dumping ground //using date and time as an identifier. probably should switch this to a uuid or something if (!Date.now) { Date.now = function() { return new Date().getTime(); }; } var now = Date.now(); BlastApp.now = now; BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now); BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
 
     /* PRIVATE FUNCTIONS */
     var _updateStatusIcon = function(status){
@@ -110,10 +100,9 @@
                             }
                         }
                     };
-        var ef = function(){
-                        if(console){
-                            console.log("Error updating status on the jobId: " + id);
-                        }
+        var ef = function(err){
+                        /* TODO: If a job is pending this will return a 404. We can just keep checking until we get something.
+                                 Maybe just stop and then show a "refresh" button? */
                     };
         cnt = 0;
         for(var i = 0; i < trs.length; i++){
@@ -136,6 +125,10 @@
 
     var _showTooltip = function(){
         var id = this.getAttribute("data-id");
+        var status = this.getAttribute("data-status");
+        if(BLAST_CONFIG.runningStates.indexOf(status) >= 0) {
+            return;
+        }
         var span = $(".blast-history-meta span#" + id);
         if ( span.hasClass("blast-hidden") ){
             $(".blast-history-meta span").addClass("blast-hidden");
@@ -323,6 +316,7 @@
             function(result){
                 var data = JSON.parse(result.data);
                 if(data.status === 'success'){
+                    console.log(data);
                     var jhc = appContext.find('.blast-job-history-content table tbody');
                     jhc.html("");
                     var jhm = appContext.find('.blast-history-meta');
@@ -392,7 +386,7 @@
     //submit form
     appContext.find('.form-submit').click(function (event) {
         event.preventDefault();//stop form submission
-        clearInterval(BlastApp._jobListChecker);
+        //clearInterval(BlastApp._jobListChecker);
         appContext.find('.blast-errors').addClass('hidden');
         appContext.find('.blast-submit').addClass('hidden');
         appContext.find('.job-monitor').removeClass('hidden');
@@ -473,7 +467,7 @@
                                     setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                                 }
                             }
-                            BlastApp.getJobList();
+                            setTimeout(function() {BlastApp.getJobList();}, 6500);
                         } else {
                             console.log('Job did not successfully submit.', jobResponse.data.message);
                             //todo better error handling here
@@ -513,6 +507,16 @@
   //todo - this needs to not just reload the page to play nice in multi-app environment
   appContext.find('.blast-reload-button').click(function(){
     location.reload();
+  });
+
+  /* function to remove/add collapsed class on panel title dropdown. In production the toggle function doesn't do this */
+  appContext.find("[data-toggle=collapse]").click(function(){
+      var el = $(this);
+      if(el.hasClass("collapsed")){
+          el.removeClass("collapsed");
+      }else{
+          el.addClass("collapsed");
+      }
   });
 
 })(window, jQuery);
