@@ -546,8 +546,11 @@
 
     //Retrieve a list of user's jobs. Will sort by status
     BlastApp.getJobList = function(){
-        window.Agave.api.jobs.searchLikeAppId(
-            {'appId.like':'*blast*'},
+        var Agave = window.Agave;
+        //Agave.api.jobs.searchLikeAppId(
+        //    {'appId.like':'*blast*'},
+        Agave.api.jobs.search(
+            null,
             function(result){
                 var data = JSON.parse(result.data);
                 if(data.status === 'success'){
@@ -560,12 +563,12 @@
                     var jhc = table.find('tbody');
                     jhc.html("");
                     var jhm = appContext.find('.blast-history-meta');
-                    var job, cnt, pageTotal, ul, i;
-                    cnt = 0;
-                    pageTotal = data.result.length;
+                    var job, ul, i;
                     for(i = 0; i < data.result.length; i++){
                         job = data.result[i];
-                        cnt++;
+                        if(job.appId.indexOf("blas") < 0){
+                            continue;
+                        }
                         BlastApp.printJobDetails(job, jhc, jhm);
                     }
                     var trs = $("tbody tr", table).hide();
