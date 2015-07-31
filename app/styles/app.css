@@ -50,8 +50,8 @@
 
 span.blast-tooltip {
       position: absolute;
-      width: 250px;
-      height: 135px;
+      width: 400px;
+      height: 180px;
       line-height: 20px;
       padding: 5px;
       font-size: 14px;
@@ -70,7 +70,13 @@ span.blast-tooltip:after {
       border-width: 10px;
       border-style: solid;
       border-color: #ccc transparent transparent transparent;
-      top: 133px;
+      top: 178px;
+      left: 100px;
+}
+
+span.blast-tooltip.north:after {
+      border-color: transparent transparent #ccc transparent;
+      top: -20px;
       left: 100px;
 }
 
@@ -78,6 +84,38 @@ span.blast-tooltip:after {
     list-style:none;
 }
 
-.blast-job-history-content table tbody tr{
-    cursor:pointer;
+.blast-aicon {
+    width:10px;
+    display:inline-block;
+    color:transparent;
+    text-indent:9999px;
+    overflow:hidden;
+}
+
+.blast-job-history-content table tbody tr td,  
+.blast-job-history-content table thead tr th {
+    text-align:center;
+}
+
+.blaster-pager {
+    list-style:none;
+}
+
+.blaster-pager li {
+    display:inline-block;
+    margin:0 3px;
+    border:1px solid #d9edf7;
+}
+
+.blaster-pager li a,
+.blaster-pager li span {
+    padding:5px;
+}
+
+table.table tbody .blaster-pager-row td{
+    background:white;
+}
+
+.blast-history-wrapper {
+    margin-top:20px;
 }

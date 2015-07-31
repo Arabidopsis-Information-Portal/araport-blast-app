@@ -1,4 +1,4 @@
-/*eslint-env browser, jquery, node*/ /*global undefined*/
+/*eslint-env browser, jquery, node*/ 
 /*eslint quotes:0, key-spacing:0, no-multi-spaces:0, comma-spacing:0, space-infix-ops:0, no-underscore-dangle:0, no-loop-func:1, eqeqeq:1, no-trailing-spaces:1*/
 (function(window, $, undefined) {
   'use strict';
@@ -51,10 +51,18 @@
     BLAST_CONFIG.errorStates    = ['KILLED', 'FAILED', 'STOPPED','ARCHIVING_FAILED'];
     BLAST_CONFIG.finishedStates = ['FINISHED'];
 
-    var BlastApp = {}; //info dumping ground //using date and time as an identifier. probably should switch this to a uuid or something if (!Date.now) { Date.now = function() { return new Date().getTime(); }; } var now = Date.now(); BlastApp.now = now; BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now); BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
+    var BlastApp = {}; //info dumping ground 
+    //using date and time as an identifier. probably should switch this to a uuid or something 
+    if (!Date.now) { 
+        Date.now = function() { return new Date().getTime(); }; 
+    } 
+    var now = Date.now(); 
+    BlastApp.now = now; 
+    BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now); 
+    BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
 
     /* PRIVATE FUNCTIONS */
-    var _updateStatusIcon = function(status){
+    BlastApp.updateStatusIcon = function(status){
         var ppc = appContext.find('.job-status .blast-job-status-icon');
         ppc.removeClass('glyphicon-remove glyphicon-ok glyphicon-refresh blast-reload-icon');
         switch(status){
@@ -70,37 +78,38 @@
         }
     };
 
-    var _checkJobListStatus = function(){
+    BlastApp.checkJobListStatus = function(){
         var tbody = appContext.find('.blast-job-history-content table tbody')[0];
         var trs = tbody.rows;
         var tr, status, id, newStatus, td, icon, cnt;
         var sf = function(response){
-                        var data = JSON.parse(response.data);
-                        if(data.status === "success"){
-                            newStatus = data.result.status;
-                            var tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
-                            var td = $(tr.find("td")[0]);
-                            if(BLAST_CONFIG.errorStates.indexOf(newStatus) >= 0) {
-                                icon = td.find('.job-list-icon');
-                                icon.removeClass('glyphicon-refresh blast-reload-icon');
-                                icon.addClass('glyphicon-remove');
-                                icon.attr('style', 'color:red;');
-                                tr.attr('data-status', newStatus);
-                                td.find('.job-list-status').text(newStatus);
-                            }else if(BLAST_CONFIG.finishedStates.indexOf(newStatus) >= 0) {
-                                icon = td.find('.job-list-icon');
-                                icon.removeClass('glyphicon-ok blast-reload-icon');
-                                icon.addClass('glyphicon-ok');
-                                icon.attr('style', 'color:green;');
-                                tr.attr('data-status', newStatus);
-                                td.find('.job-list-status').text(newStatus);
-                            }else if(BLAST_CONFIG.runningStates.indexOf(newStatus) >= 0) {
-                                tr.attr('data-status', newStatus);
-                                td.find('.job-list-status').text(newStatus);
-                            }
-                        }
-                    };
+            var data = JSON.parse(response.data);
+            if(data.status === "success"){
+                newStatus = data.result.status;
+                tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
+                td = $(tr.find("td")[0]);
+                if(BLAST_CONFIG.errorStates.indexOf(newStatus) >= 0) {
+                    icon = td.find('.job-list-icon span');
+                    icon.removeClass('glyphicon-refresh blast-reload-icon');
+                    icon.addClass('glyphicon-remove');
+                    icon.attr('style', 'color:red;');
+                    tr.attr('data-status', newStatus);
+                    td.find('.job-list-status').text(newStatus);
+                }else if(BLAST_CONFIG.finishedStates.indexOf(newStatus) >= 0) {
+                    icon = td.find('.job-list-icon span');
+                    icon.removeClass('glyphicon-ok blast-reload-icon');
+                    icon.addClass('glyphicon-ok');
+                    icon.attr('style', 'color:green;');
+                    tr.attr('data-status', newStatus);
+                    td.find('.job-list-status').text(newStatus);
+                }else if(BLAST_CONFIG.runningStates.indexOf(newStatus) >= 0) {
+                    tr.attr('data-status', newStatus);
+                    td.find('.job-list-status').text(newStatus);
+                }
+            }
+        };
         var ef = function(err){
+
                         /* TODO: If a job is pending this will return a 404. We can just keep checking until we get something.
                                  Maybe just stop and then show a "refresh" button? */
                     };
@@ -123,25 +132,28 @@
         }
     };
 
-    var _showTooltip = function(){
-        var id = this.getAttribute("data-id");
-        var status = this.getAttribute("data-status");
-        if(BLAST_CONFIG.runningStates.indexOf(status) >= 0) {
-            return;
-        }
+    BlastApp.showTooltip = function(el){
+        var tr = el.parent().parent().parent();
+        var id = tr[0].getAttribute("data-id");
+        var status = tr[0].getAttribute("data-status");
         var span = $(".blast-history-meta span#" + id);
         if ( span.hasClass("blast-hidden") ){
             $(".blast-history-meta span").addClass("blast-hidden");
+            if(tr.offset().top < span.height()){
+                span.addClass("north");
+                span.css({top: tr.offset().top + tr.height(), left:tr.parent().width() / 2});
+            } else {
+                span.css({top: tr.offset().top - span.height(), left:tr.parent().width() / 2});
+                span.removeClass("north");
+            }
             span.removeClass("blast-hidden");
-            var tr = $(this);
-            span.offset({top: tr.offset().top - span.height() - (tr.height() / 2), left:50});
         }else{
             $(".blast-history-meta span").addClass("blast-hidden");
             span.addClass("blast-hidden");
         }
     };
 
-    var _downloadResults = function(archive){
+    BlastApp.downloadArchivedResults = function(archive){
         if(typeof archive !== 'undefined'){
             var Agave = window.Agave;
             var outputData;
@@ -174,7 +186,230 @@
             );
         }
     };
-    /* END OF PRIVATE FUNCTIONS */
+
+    BlastApp.manageJob = function(jobId, action){
+        var Agave = window.Agave;
+        Agave.api.jobs.manage({'jobId': jobId, 'body':"{\"action\":\"" + action + "\"}"}, 
+            function(response){
+                var data = JSON.parse(response.data);
+                if(data.status == "success"){
+                    BlastApp.getJobList();
+                }
+            }, 
+            function(err){
+                BlastApp.jobError("There was an error resubmitting the job, please refresh and try again.");
+                if(console){
+                    console.log(err.reason);
+                }
+            });
+    };
+
+    BlastApp.createActionLinks = function(job, row){
+        var tdspan = row.find(".blast-history-actions");
+        var a = $("<a href=\"#\">" + 
+              "<span class=\"glyphicon glyphicon-refresh\"></span> " + 
+              "<span>Resubmit</span>" +
+              "</a>");
+        a.click(function(e){
+            e.preventDefault();
+            var el = $(this);
+            var jobId = el.parent().parent().parent().attr("data-id");
+            el.find('.glyphicon').addClass('blast-reload-icon');
+            BlastApp.manageJob(jobId, "resubmit");
+        });
+        tdspan.append(a);
+        tdspan.append("<br>");
+
+        if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
+            a = $("<a href=\"#\">" + 
+                  "<span class=\"glyphicon glyphicon-stop\"></span> " + 
+                  "<span>Stop</span>" +
+                  "</a>");
+            a.click(function(e){
+                e.preventDefault();
+                var el = $(this);
+                var jobId = el.parent().parent().parent().attr("data-id");
+                el.find('.glyphicon').addClass('blast-reload-icon');
+                BlastApp.manageJob(jobId, "stop");
+            });
+            tdspan.append(a);
+            tdspan.append("<br>");
+        }
+
+        a = $("<a href=\"#\">" +
+              "<span class=\"glyphicon glyphicon-info-sign\"></span>" +
+              "<span> More Info</span>" +
+              "</a>");
+        a.click(function(e){
+            e.preventDefault();
+            BlastApp.showTooltip($(this));
+        });
+        tdspan.append(a);
+        tdspan.append("<br>");
+    };
+
+    BlastApp.createDownloadLink = function(job, row, archive){
+        var a;
+        var tdspan = row.find(".blast-history-download");
+        a = $("<a href=\"" + archive  + "\">Download Results</a>");
+        a.click(function(e){
+            e.preventDefault(); 
+            BlastApp.downloadArchivedResults(this.getAttribute("href")); }
+            );
+        tdspan.append(a);
+    };
+
+    BlastApp.createRow = function(job){
+        var ds = new Date(job.created);
+        var de = new Date(job.endTime);
+        var icon;
+         if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
+            icon = "<span class='glyphicon glyphicon-refresh blast-reload-icon'></span>";
+        } else if(BLAST_CONFIG.errorStates.indexOf(job.status) >= 0) {
+            icon = "<span class='glyphicon glyphicon-remove' style='color:red'></span>";
+        } else if(BLAST_CONFIG.finishedStates.indexOf(job.status) >=0) {
+            icon = "<span class='glyphicon glyphicon-ok' style='color:green'></span>";
+        }
+        var row = $("<tr data-status=" + job.status + " data-id=" + job.id +">" +
+            "<td><span class='job-list-icon'>" + icon + "</span> " +
+                 "<span class='job-list-status'>" + job.status + "</san></td>" +
+            "<td>" + job.appId.split('-')[1] + "</td>" +
+            "<td><span style=\"font-weight:bold;\">Created:</span><span> " 
+                   + ((ds.getMonth() + 1) < 10 ? "0" + (+ds.getMonth() + 1) : (ds.getMonth() + 1))
+                   + "/" + (ds.getDate() < 10 ? "0" + ds.getDate() : ds.getDate()) + "/" 
+                   + ds.getFullYear() + " " + 
+                   (ds.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
+                   + (ds.getMinutes() < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
+                   +  "</span></br>" +
+            "<span style=\"font-weight:bold;\">End Time: </span><span>" 
+                + ((de.getMonth() + 1) < 10 ? "0" + (+ds.getMonth() + 1) : (ds.getMonth() + 1))
+                + "/" + (de.getDate() < 10 ? "0" + ds.getDate() : ds.getDate()) + "/" 
+                + de.getFullYear() + " " + 
+                (de.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
+                + (de.getMinutes()  < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
+                +  "</span></td>" +
+            "<td><span class='blast-history-download'></span></td>" +
+            "<td><span class='blast-history-actions'></span></td>" +
+            "</tr>");
+        return row;
+    };
+
+    BlastApp.createSpanMetadata = function(job){
+        var span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip\">" +
+        "<ul><li><b>ExecutionSystem: </b></li>" + 
+        "</li>" + job.executionSystem + "</li>" +
+        "<li><b>Job Id: </b></li>" + 
+        "<li>" + job.id + "</li>" +
+        "<li><b>App Id: </b></li>" +
+        "<li>" + job.appId + "</li>" +
+        "<li><b>Name: </b></li>" +
+        "<li>" + job.name + "</li>" +
+        "</span>");
+        return span;
+    };
+
+    BlastApp.printJobDetails =  function(job, jhc, jhm){
+        var span, archiveUrl, archive, row;
+        //Print info
+        archiveUrl = job._links.archiveData.href;
+        archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
+        archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
+        //var archive = archiveUrl + '/' + job.name + '.out';
+        row = BlastApp.createRow(job);
+
+        BlastApp.createDownloadLink(job, row, archive);
+
+        BlastApp.createActionLinks(job, row);
+
+        jhc.append(row);
+
+        span = BlastApp.createSpanMetadata(job);
+
+        jhm.append(span);
+    };
+
+    BlastApp.appendPager = function(table, pager){
+        var row = $(".blaster-pager-row", table);
+        var cell;
+        var append = false;
+        if(row.length <= 0){
+            row = $("<tr class=\"blaster-pager-row\"></tr>");
+            cell = $("<td colspan=\"5\"></td>");
+            row.append(cell);
+            append = true;
+        }else{
+            cell = $("td", row);
+        }
+        cell.append(pager);
+        if(append){
+            table.append(row);
+        }
+        row.show();
+    };
+
+    BlastApp.showPage = function(table, results, pageLength, curPage, page){
+        var trs = $("tbody tr", table);
+        trs.hide();
+        var tr;
+        for(var i = (page - 1) * pageLength; i < ((page - 1) * pageLength + (pageLength - 1)) && i < (page * pageLength); i++){
+            tr = $(trs[i]);
+            tr.show();
+        }
+        curPage = +page;
+        $(".blaster-pager", table).remove();
+        var ul = BlastApp.printPager(table, results, pageLength, curPage);
+        BlastApp.appendPager(table, ul);
+    };
+
+    BlastApp.printPager = function(table, results, pageLength, curPage){
+        var pages = Math.ceil(results.length / pageLength);
+        var ul = $("<ul class=\"blaster-pager\"></ul>");
+        
+        if(pages < 2){ return ul; }
+
+        ul.append("<li><a href=\"previous\">Previous</a></li>");
+        if(curPage == 1){
+            ul.append("<li><span>1</span></li>");
+        }else{
+            ul.append("<li " + (curPage == 1? "class=\"selected\"" : "") + "><a href=\"1\">1</a></li>");
+        }
+        if(curPage - 2 != 1 && curPage - 2 > 1){
+            ul.append("<li><span>...</span></li>");
+        }
+        if(curPage - 1 != 1 && curPage - 1 > 1){
+            ul.append("<li><a href=\"" + (curPage - 1) + "\">" + (curPage - 1) + "</a></li>");
+        }
+        if(curPage != 1 && curPage != pages) {
+            ul.append("<li><span>" + curPage + "</span></li>");
+        }
+        if(curPage + 1 != pages && curPage + 1 < pages){
+            ul.append("<li><a href=\"" + (curPage + 1) + "\">" + (curPage + 1) + "</a></li>");
+        }
+        if(curPage + 2 != pages && curPage + 2 < pages){
+            ul.append("<li><span>...</span></li>");
+        }
+        if(curPage == pages){
+            ul.append("<li><span>" + pages + "</span></li>");
+        }else{
+            ul.append("<li " + (curPage == pages? "class=\"selected\"" : "") + "><a href=\"" + pages + "\">" + pages + "</a></li>");
+        }
+        ul.append("<li><a href=\"next\">Next</a></li>");
+        $("a", ul).click(function(e){
+            e.preventDefault();
+            var page = $(this).attr('href');
+            if (page == 'previous' && curPage - 1 > 0){
+                page = curPage - 1;
+            }else if(page == 'previous' && curPage - 1 <= 0){
+               page = 1;
+            }else if(page == 'next' && curPage + 1 <= pages){
+                page = curPage + 1;
+            }else if(page == 'next' && curPage + 1 > pages){
+                page = pages;
+            }
+            BlastApp.showPage(table, results, pageLength, curPage, page);
+        });
+        return ul;
+    };
 
     //get the user's profile info, mostly for the username
     BlastApp.getProfile = function(Agave) {
@@ -238,10 +473,10 @@
                         setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                     } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
                         console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
-                        _updateStatusIcon("error");
+                        BlastApp.updateStatusIcon("error");
                         BlastApp.jobError('Job status is ' + BlastApp.status);
                     } else if(BLAST_CONFIG.finishedStates.indexOf(BlastApp.status) >=0) {
-                        _updateStatusIcon("success");
+                        BlastApp.updateStatusIcon("success");
                         BlastApp.jobFinished(json.obj.result);
                     } else {
                         console.log('unknown job state! =' + BlastApp.status);
@@ -311,71 +546,41 @@
 
     //Retrieve a list of user's jobs. Will sort by status
     BlastApp.getJobList = function(){
-        window.Agave.api.jobs.list(
-            null,
+        window.Agave.api.jobs.searchLikeAppId(
+            {'appId.like':'*blast*'},
             function(result){
                 var data = JSON.parse(result.data);
                 if(data.status === 'success'){
                     console.log(data);
-                    var jhc = appContext.find('.blast-job-history-content table tbody');
+                    var table = appContext.find('.blast-job-history-content table');
+                    var page = +table.attr('data-page');
+                    if (isNaN(page)){
+                        page = 1;
+                    }
+                    var jhc = table.find('tbody');
                     jhc.html("");
                     var jhm = appContext.find('.blast-history-meta');
-                    var job, icon, cnt, ds, de, span;
+                    var job, cnt, pageTotal, ul, i;
                     cnt = 0;
-                    for(var i in data.result){
+                    pageTotal = data.result.length;
+                    for(i = 0; i < data.result.length; i++){
                         job = data.result[i];
-                        if(job.appId.indexOf("ncbi-blast") == 0){
-                            //count
-                            cnt++;
-                            //if more than ten, break.
-                            if (cnt > 10) { break; }
-                            //Print info
-                            var archiveUrl = job._links.archiveData.href;
-                            archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
-                            var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
-                            //var archive = archiveUrl + '/' + job.name + '.out';
-                            ds = new Date(job.created);
-                            de = new Date(job.endTime);
-                            if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
-                                icon = "<span class='glyphicon glyphicon-refresh blast-reload-icon'></span>";
-                            } else if(BLAST_CONFIG.errorStates.indexOf(job.status) >= 0) {
-                                icon = "<span class='glyphicon glyphicon-remove' style='color:red'></span>";
-                            } else if(BLAST_CONFIG.finishedStates.indexOf(job.status) >=0) {
-                                icon = "<span class='glyphicon glyphicon-ok' style='color:green'></span>";
-                            }
-                            jhc.append($("<tr data-status=" + job.status + " data-id=" + job.id +">" +
-                                "<td><span class='job-list-icon'>" + icon + "</span> " +
-                                     "<span class='job-list-status'>" + job.status + "</san></td>" +
-                                "<td>" + job.appId + "</td>" +
-                                "<td>" + (ds.getMonth() + 1) + "/" + ds.getDate() + "/" 
-                                    + ds.getFullYear() + " " + ds.getHours() + ":" + ds.getMinutes() +  "</td>" +
-                                "<td>" + (de.getMonth() + 1) + "/" + de.getDate() + "/" 
-                                    + de.getFullYear() + " " + de.getHours() + ":" + de.getMinutes() +  "</td>" +
-                               "<td>" + job.name + "</td>" +
-                                "</tr>").click(_showTooltip));
-                            span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip\">" +
-                                "<ul><li><b>ExecutionSystem: </b></li>" + 
-                                "</li>" + job.executionSystem + "</li>" +
-                                "<li><b>Job Id: </b></li>" + 
-                                "<li>" + job.id + "</li>" +
-                                "<li class=\"blast-history-download\"></li>" +
-                                "</span>");
-                            jhm.append(span);
-                            var a = $("<a href=\"" + archive  + "\">Download Results</a>");
-                            span.find(".blast-history-download").append(a);
-                            a.click(function(e){
-                                e.preventDefault(); 
-                                _downloadResults(this.getAttribute("href")); }
-                                );
-                        }
+                        cnt++;
+                        BlastApp.printJobDetails(job, jhc, jhm);
                     }
+                    var trs = $("tbody tr", table).hide();
+                    for(i = 0; i < trs.length - 1 && i < 10; i++){
+                        $(trs[i]).show();
+                    }
+                    ul = BlastApp.printPager(table, data.result, 10, page);
+                    BlastApp.appendPager(table, ul);
                 }
             },
             function(){
                 BlastApp.jobError('Couldn\'t retrieve job list. Please try again later');
             }
         );
-        BlastApp._jobListChecker = setInterval(_checkJobListStatus, 5000);
+        BlastApp._jobListChecker = setInterval(BlastApp.checkJobListStatus, 5000);
     };
 
     //on form change add class to form element to pick out and add to app description
@@ -457,17 +662,17 @@
                             //is the job done? (unlikely)
                             if(BlastApp.status === 'FINISHED') {
                                 console.log('job immediately finished');
-                                _updateStatusIcon("success");
+                                BlastApp.updateStatusIcon("success");
                                 BlastApp.jobFinished(jobResponse.obj.result);
                             } else { //more likely we need to poll the status
                                 BlastApp.status = jobResponse.obj.result.status;
                                 appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
                                 if((BlastApp.status === 'PENDING')) {
-                                    _updateStatusIcon("pending");
+                                    BlastApp.updateStatusIcon("pending");
                                     setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                                 }
                             }
-                            setTimeout(function() {BlastApp.getJobList();}, 6500);
+                            setTimeout(function() {BlastApp.getJobList(); }, 6500);
                         } else {
                             console.log('Job did not successfully submit.', jobResponse.data.message);
                             //todo better error handling here

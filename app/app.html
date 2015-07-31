@@ -4,34 +4,6 @@
     <div class="alert alert-danger hidden blast-errors" role="alert"></div>
   </div>
   <!-- end div job-montior -->
-  <div class="blast-history-wrapper">
-      <div class="panel panel-default blast-job-history-panel panel-info">
-            <div class="panel-title panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".job-history">
-            Job History
-            </div>
-            <div class="panel-body job-history collapse">
-                <div class="blast-job-history-content">
-                    <div class="table-responsive">
-                        <span class="blast-history-message"></span>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Status:</th>
-                                    <th>appId: </th>
-                                    <th>Created: </th>
-                                    <th>End Time: </th>
-                                    <th>Name: </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="blast-history-meta"></div>
-                </div>
-            </div>
-        </div>
-      </div>
   <div class="blast-submit">
     <form role="form" action="/aip/apps/blast" method="post" id="araport-apps-form" accept-charset="UTF-8">
       <div class="form-group">
@@ -183,5 +155,33 @@
     <div class="well job-output">Output will go here.</div>
   </div>
   <!-- end div job-montior -->
+  <div class="blast-history-wrapper">
+      <div class="panel panel-default blast-job-history-panel panel-info">
+            <div class="panel-title panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".job-history">
+            Job History
+            </div>
+            <div class="panel-body job-history collapse">
+                <div class="blast-job-history-content">
+                    <div class="table-responsive">
+                        <span class="blast-history-message"></span>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Status:</th>
+                                    <th>Blast Type: </th>
+                                    <th>Date Time: </th>
+                                    <th>Results: </th>
+                                    <th>Actions: </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="blast-history-meta"></div>
+                </div>
+            </div>
+        </div>
+  </div>
 </div>
 <!-- end div class="science-app" data-app-name="package" -->
