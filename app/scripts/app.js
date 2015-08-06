@@ -549,8 +549,8 @@
         var Agave = window.Agave;
         //Agave.api.jobs.searchLikeAppId(
         //    {'appId.like':'*blast*'},
-        Agave.api.jobs.search(
-            {queryParams: {'appId.like': '*blastx*'} },
+        Agave.api.jobs.list(
+            null,
             function(result){
                 var data = JSON.parse(result.data);
                 if(data.status === 'success'){
