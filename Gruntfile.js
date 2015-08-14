@@ -53,7 +53,7 @@ module.exports = function(grunt) {
     // The actual grunt server settings
     connect: {
       options: {
-        port: 9000,
+        port: 9090,
         open: true,
         livereload: 35729,
         // Change this to '0.0.0.0' to access the server from outside
@@ -68,7 +68,8 @@ module.exports = function(grunt) {
               connect.static('.tmp'),
               connect().use('/lib', connect.static('lib')),
               connect().use('/bower_components', connect.static('./bower_components')),
-              connect().use('/app', connect.static(config.app))
+              connect().use('/app', connect.static(config.app)),
+              connect().use('/assets', connect.static('./assets'))
             ];
           }
         }
@@ -80,7 +81,8 @@ module.exports = function(grunt) {
               connect.static('.tmp'),
               connect().use('/lib', connect.static('lib')),
               connect().use('/bower_components', connect.static('./bower_components')),
-              connect().use('/app', connect.static(config.app))
+              connect().use('/app', connect.static(config.app)),
+              connect().use('/assets', connect.static('./assets'))
             ];
           }
         }
