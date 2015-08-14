@@ -2,6 +2,7 @@
   "name": "araport-blast-plus",
   "private": true,
   "dependencies": {
-    "FileSaver.js": "Arabidopsis-Information-Portal/FileSaver.js"
+    "FileSaver": "Arabidopsis-Information-Portal/FileSaver.js",
+    "pickadate": "amsul/pickadate.js"
   }
 }
