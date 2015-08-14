@@ -1,0 +1,12 @@
+{
+    'namespace' : 'my-app',
+    'name': 'Blast History',
+    'description': 'Blast History plus job history',
+    'html': 'blast.hml',
+    'scripts': [
+                'main.js'
+                ]
+    'styles': [
+                'main.css'
+            ]
+}
