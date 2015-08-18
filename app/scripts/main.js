@@ -1,5 +1,4 @@
-/*eslint-env browser, jquery, node*/ 
-/*eslint quotes:0, key-spacing:0, no-multi-spaces:0, comma-spacing:0, space-infix-ops:0, no-underscore-dangle:0, no-loop-func:1, eqeqeq:1, no-trailing-spaces:1*/
+/* jshint quotmark:false, eqeqeq:false, laxbreak:true, unused:false */
 (function(window, $, undefined) {
   'use strict';
 
@@ -13,6 +12,15 @@
     'tblastn':'ncbi-tblastn-2.2.29u5',
     'tblastx':'ncbi-tblastx-2.2.29u4',
   };
+
+  var blastTypesFilter = [
+      {lbl: '--Select One--', val:'.*' },
+      {lbl: 'blastn', val: '^blastn'},
+      {lbl: 'blastp', val: '^blastp'},
+      {lbl: 'blastx', val: '^blastx'},
+      {lbl: 'tblastn', val: '^tblastn'},
+      {lbl: 'tblastx', val: '^tblastx'},
+  ];
 
   //app template
   var BLAST_CONFIG = {
@@ -126,7 +134,7 @@
                     ef);
             }
         }
-        if(cnt == 0){
+        if(cnt === 0){
             clearInterval(BlastApp._jobListChecker);
 
         }
@@ -328,12 +336,49 @@
         jhm.append(span);
     };
 
+    BlastApp.filterBy = function(table, filter, coli){
+        var trs = $("tbody tr", table);
+        var tr, td, val;
+        var re = new RegExp(filter);
+        for(var i = 0; i < trs.length; i++){
+            tr = trs[i];
+            if(tr.cells.length < coli || i === trs.length - 1){
+                continue;
+            }
+            val = tr.cells[coli].textContent;
+            tr = $(tr);
+            if (!val.match(filter)){
+                tr.hide();
+                tr.attr("data-lvot", "true");
+            }else{
+                //tr.show();
+                tr.removeAttr("data-lvot");
+            }
+        }
+        var rlength = $("tbody tr[data-lvot!=\"true\"]", table).length;
+        BlastApp.showPage(table, rlength, 10, 1, 1);
+    };
+
+    BlastApp.printTableFilter = function(table, jhc, values, label, name){
+        var select = $("<select name=\"" + name + "\" id=\"" + name + "\"></select>");
+        var lbl = $("<label for=\"" + name + "\">" + label + "</label>");
+        var v, o;
+        for(var i =0; i < values.length; i++){
+            v = values[i];
+            o = $("<option value=\"" + v.val + "\">" + v.lbl + "</option>");
+            select.append(o);
+        }
+        select.change(function(){BlastApp.filterBy(table, $(this).val(), 1);});
+        jhc.append(lbl);
+        jhc.append(select);
+    };
+
     BlastApp.appendPager = function(table, pager){
         var row = $(".blaster-pager-row", table);
         var cell;
         var append = false;
         if(row.length <= 0){
-            row = $("<tr class=\"blaster-pager-row\"></tr>");
+            row = $("<tr class=\"blaster-pager-row\" data-lvot=\"true\"></tr>");
             cell = $("<td colspan=\"5\"></td>");
             row.append(cell);
             append = true;
@@ -347,9 +392,9 @@
         row.show();
     };
 
-    BlastApp.showPage = function(table, results, pageLength, curPage, page){
-        var trs = $("tbody tr", table);
-        trs.hide();
+    BlastApp.showPage = function(table, rlength, pageLength, curPage, page){
+        $("tbody tr[data-lvot!=\"true\"]", table).hide();
+        var trs = $("tbody tr[data-lvot!=\"true\"]", table);
         var tr;
         for(var i = (page - 1) * pageLength; i < ((page - 1) * pageLength + (pageLength - 1)) && i < (page * pageLength); i++){
             tr = $(trs[i]);
@@ -357,12 +402,12 @@
         }
         curPage = +page;
         $(".blaster-pager", table).remove();
-        var ul = BlastApp.printPager(table, results, pageLength, curPage);
+        var ul = BlastApp.buildPager(table, rlength, pageLength, curPage);
         BlastApp.appendPager(table, ul);
     };
 
-    BlastApp.printPager = function(table, results, pageLength, curPage){
-        var pages = Math.ceil(results.length / pageLength);
+    BlastApp.buildPager = function(table, rlength, pageLength, curPage){
+        var pages = Math.ceil(rlength / pageLength);
         var ul = $("<ul class=\"blaster-pager\"></ul>");
         
         if(pages < 2){ return ul; }
@@ -406,7 +451,7 @@
             }else if(page == 'next' && curPage + 1 > pages){
                 page = pages;
             }
-            BlastApp.showPage(table, results, pageLength, curPage, page);
+            BlastApp.showPage(table, rlength, pageLength, curPage, page);
         });
         return ul;
     };
@@ -564,6 +609,9 @@
                     jhc.html("");
                     var jhm = appContext.find('.blast-history-meta');
                     var job, ul, i;
+                    BlastApp.printTableFilter(table, 
+                            $(".blast-job-history-content .job-history-controls"),
+                            blastTypesFilter, "Filter by Blast Type: ", "blast-filter");
                     for(i = 0; i < data.result.length; i++){
                         job = data.result[i];
                         if(job.appId.indexOf("blas") < 0){
@@ -571,12 +619,9 @@
                         }
                         BlastApp.printJobDetails(job, jhc, jhm);
                     }
-                    var trs = $("tbody tr", table).hide();
-                    for(i = 0; i < trs.length - 1 && i < 10; i++){
-                        $(trs[i]).show();
-                    }
-                    ul = BlastApp.printPager(table, data.result, 10, page);
-                    BlastApp.appendPager(table, ul);
+                    BlastApp.showPage(table, data.result.length, 10, 1, page);
+                    //ul = BlastApp.buildPager(table, data.result, 10, page);
+                    //BlastApp.appendPager(table, ul);
                 }
             },
             function(){

@@ -1,7 +1,11 @@
 {
   "name": "araport-blast-plus",
   "version": "0.1.0",
-  "dependencies": {},
+  "dependencies": {
+    "fs": "0.0.2",
+    "lodash": "^3.10.1",
+    "path": "^0.11.14"
+  },
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-autoprefixer": "^1.0.0",

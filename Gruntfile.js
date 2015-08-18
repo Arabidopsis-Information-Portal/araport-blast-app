@@ -1,4 +1,5 @@
 /*global module:false*/
+/*jshint quotmark:false, unused:false*/
 'use strict';
 module.exports = function(grunt) {
 
@@ -19,6 +20,10 @@ module.exports = function(grunt) {
       bower: {
         files: ['bower.json'],
         tasks: ['wiredep']
+      },
+      araport:{
+          files: ['araport-app.json'],
+          tasks: ['araport-wiredep']
       },
       gruntfile: {
         files: 'Gruntfile.js',
@@ -173,11 +178,120 @@ module.exports = function(grunt) {
     }
   });
 
+/*
+*   This task reads araport-app.json file and injects the necessary references
+*   in the specified files. Its functionality is based on wiredep's functionality.
+*   There could probably be a better solution out there, or maybe modify grunt-wiredep?
+*/
+  grunt.registerTask('araport-wiredep', '', function(){
+    console.log('Wiring dependencies from araport-app.json');
+    var $ = {
+      _: require('lodash'),
+      fs: require('fs'),
+      path: require('path'),
+    };
+    var config = {
+        'src': 'index.html',
+        'appFile': 'araport-app.json',
+        'fileTypes':{
+            'js':{
+                'depprop': 'scripts',
+                'depcwd': 'app/scripts/',
+                'replaceStr': '<script src="%filePath%"></script>'
+            },
+            'css':{
+                'depprop': 'styles',
+                'depcwd': 'app/styles/',
+                'replaceStr': '<link rel="stylesheet" href="%filePath%" />'
+            },
+            'html':{
+                'depprop': 'html',
+                'depcwd': '/app/',
+                'replaceStr': 'include "%filePath%"'
+            },
+        },
+        'block': /(([ \t]*)<!--\s*araport_dep:*(\S*)\s*-->)(\n|\r|.)*?(<!--\s*endaraport_dep\s*-->)/gi
+    };
+    var error;
+    //Check for the araport=app.json file and load it.
+    if(!$.fs.existsSync(config.appFile)){
+        error = new Error('Cannot find araport-app.json');
+        error.code = 'ARAPORT_COMPONENTS_MISSING';
+        throw new Error(error);
+    }
+    var ajson = JSON.parse($.fs.readFileSync(config.appFile));
+    //Check for the index.html file and load it.
+    if(!$.fs.existsSync(config.src)){
+        error = new Error('Cannot find src file');
+        error.code = 'ARAPORT_COMPONENTS_MISSING';
+        throw new Error(error);
+    }
+    var shtml = String($.fs.readFileSync(config.src));
+    var filePath = config.src;
+    //var fileExt = $.path.extname(filePath).substr(1);
+    //Get the file types that are on the config json.
+    var fileTypes = [];
+    $._.forEach(config.fileTypes, function(n, key){
+        fileTypes.push(key);
+    });
+    //function to get the array of file names to wire.
+    var _getFileNames = function(fileType, config, ajson){
+        var depprop = config.fileTypes[fileType].depprop;
+        var ret = [];
+        var tmpRet = ajson[depprop];
+        if(tmpRet.constructor !== Array){
+            ret.push(tmpRet);
+        }else{
+            ret = tmpRet;
+        }
+        return ret;
+    };
+    //function to append the relative path within the app to the files to wire.
+    var _getRelPaths = function(fileType, config, ajson, fileNames){
+        var depcwd = config.fileTypes[fileType].depcwd;
+        var relPaths = [];
+        $._(fileNames).forEach(function(n){
+            relPaths.push(depcwd + n);
+        }).value();
+        return relPaths;
+    };
+
+    //Callback function when we find a block
+    var _constructDeps = function(relPaths, config, fileType){
+        var paths = relPaths;
+        var cfg = config;
+        var ft = fileType;
+        return function(match, startBlock, spacing, blockType, oldScripts, endBlock, offset, string){
+            var ret = '';
+            if(blockType !== fileType){
+                return match;
+            }
+            var deps = "";
+            $._(paths).forEach(function(relPath){
+                deps += cfg.fileTypes[ft].replaceStr.replace('%filePath%', relPath) + spacing;
+            }).value();
+            return startBlock + '\n' + spacing + deps + '\n' +  spacing + endBlock;
+        };
+    };
+    var newCont = shtml;
+    $._(fileTypes).forEach(function(n){
+        console.log("for filetype: " + n);
+        var fileNames = _getFileNames(n, config, ajson);
+        var relPaths = _getRelPaths(n, config, ajson, fileNames);
+        newCont = newCont.replace(config.block, _constructDeps(relPaths, config, n));
+    }).value();
+    if (newCont !== shtml){
+        $.fs.writeFileSync(filePath, newCont);
+    }
+    return true; 
+  });
+
   grunt.registerTask('serve', function (target) {
     if (target === 'dist') {
       return grunt.task.run([
         'clean:server',
         'jshint',
+        'araport-wiredep',
         'wiredep',
         'includes',
         'copy',
@@ -188,6 +302,7 @@ module.exports = function(grunt) {
     grunt.task.run([
       'clean:server',
       'jshint',
+      'araport-wiredep',
       'wiredep',
       'includes',
       'copy',
@@ -210,6 +325,7 @@ module.exports = function(grunt) {
   grunt.registerTask('dist', [
     'clean:dist',
     'jshint',
+    'araport-wiredep',
     'wiredep',
     'inline'
   ]);

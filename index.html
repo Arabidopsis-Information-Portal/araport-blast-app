@@ -19,7 +19,9 @@
   <link rel="stylesheet" href="bower_components/pickadate/lib/themes/default.date.css" />
   <link rel="stylesheet" href="bower_components/pickadate/lib/themes/default.time.css" />
   <!-- endbower-->
-
+  <!-- araport_dep:css -->
+  <link rel="stylesheet" href="app/styles/main.css" />  
+  <!-- endaraport_dep -->
   <style type="text/css">
   body {
     padding-top: 60px;
@@ -27,7 +29,6 @@
   </style>
 
   <!-- application styles -->
-  <link rel="stylesheet" type="text/css" href="/app/styles/app.css">
 </head>
 <body>
   <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -66,7 +67,9 @@
   </div>
 
   <div class="aip-science-app container">
-    include "/app/app.html"
+    <!-- araport_dep:html -->
+    include "/app/blast.html"    
+    <!-- endaraport_dep -->
   </div>
 
   <!-- swagger-js -->
@@ -83,8 +86,9 @@
   <script src="bower_components/pickadate/lib/picker.date.js"></script>
   <script src="bower_components/pickadate/lib/picker.time.js"></script>
   <!-- endbower -->
-
+  <!-- araport_dep:js -->
+  <script src="app/scripts/main.js"></script>  
+  <!-- endaraport_dep -->
   <!-- application code -->
-  <script src="/app/scripts/app.js"></script>
 </body>
 </html>
