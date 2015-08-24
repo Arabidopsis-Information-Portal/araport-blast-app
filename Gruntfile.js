@@ -190,6 +190,7 @@ module.exports = function(grunt) {
       fs: require('fs'),
       path: require('path'),
     };
+    //TODO relative path of assets, scripts and styles should only be app/ without the {styles, assets, scripts}
     var config = {
         'src': 'index.html',
         'appFile': 'araport-app.json',

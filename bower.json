@@ -3,6 +3,7 @@
   "private": true,
   "dependencies": {
     "FileSaver": "Arabidopsis-Information-Portal/FileSaver.js",
-    "pickadate": "amsul/pickadate.js"
+    "pickadate": "amsul/pickadate.js",
+    "selectize": "Arabidopsis-Information-Portal/selectize.js"
   }
 }
