@@ -24,7 +24,7 @@
 
   //app template
   var BLAST_CONFIG = {
-        'name': 'blast-%DATESTAMP',
+        'name': 'blast-%DATESTAMP%',
         'appId': 'ncbi-blastn-2.2.29u3',
         'queue': 'normal',
         'nodeCount': 1,
@@ -32,7 +32,7 @@
         'processorsPerNode': 1,
         'requestedTime': '00:30:00',
         'archive': true,
-        'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP',
+        'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP%',
         'archiveSystem': 'araport-storage-00',
         /*
         'notifications': [{
@@ -66,8 +66,8 @@
     } 
     var now = Date.now(); 
     BlastApp.now = now; 
-    BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP',now); 
-    BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP',now);
+    BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%DATESTAMP%',now); 
+    BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP%',now);
 
     /* PRIVATE FUNCTIONS */
     BlastApp.updateStatusIcon = function(status){
@@ -98,14 +98,14 @@
                 td = $(tr.find("td")[0]);
                 if(BLAST_CONFIG.errorStates.indexOf(newStatus) >= 0) {
                     icon = td.find('.job-list-icon span');
-                    icon.removeClass('glyphicon-refresh blast-reload-icon');
+                    icon.removeClass('glyphicon-refresh blast-reload-icon glyphicon-remove');
                     icon.addClass('glyphicon-remove');
                     icon.attr('style', 'color:red;');
                     tr.attr('data-status', newStatus);
                     td.find('.job-list-status').text(newStatus);
                 }else if(BLAST_CONFIG.finishedStates.indexOf(newStatus) >= 0) {
                     icon = td.find('.job-list-icon span');
-                    icon.removeClass('glyphicon-ok blast-reload-icon');
+                    icon.removeClass('glyphicon-ok blast-reload-icon glyphicon-remove glyphicon-refresh');
                     icon.addClass('glyphicon-ok');
                     icon.attr('style', 'color:green;');
                     tr.attr('data-status', newStatus);
@@ -116,11 +116,36 @@
                 }
             }
         };
+        var crf = function(response){
+            var data = JSON.parse(response.data);
+            if(data.status === 'success'){
+                var job = data.result;
+                tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
+                var ntr = BlastApp.createRow(job);
+                if(BLAST_CONFIG.finishedStates.indexOf(job.status) >= 0) {
+                    var archiveUrl = job._links.archiveData.href;
+                    archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
+                    var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
+                    BlastApp.createDownloadLink(job, ntr, archive);
+                }
+                BlastApp.createActionLinks(job, ntr);
+                tr.replaceWith(ntr);
+            }
+        };
+        var eef = function(err){
+            /*Print the error to the console*/
+            if(console){console.log("Error getting job status: ", err);}
+        };
         var ef = function(err){
-
-                        /* TODO: If a job is pending this will return a 404. We can just keep checking until we get something.
-                                 Maybe just stop and then show a "refresh" button? */
-                    };
+            /*If a job is pending Agave.api.jobs.get({"jobId":"id"}) will return a 404.
+            This means that we can only now the status of the job using getStatus*/
+            if(console){
+                console.log("Error getting job , let's try gettin just the status ", err);
+            }
+            window.Agave.api.jobs.getStatus({"jobId": id}, 
+                sf,
+                eef);
+        };
         cnt = 0;
         for(var i = 0; i < trs.length; i++){
             tr = trs[i];
@@ -129,8 +154,8 @@
             if(BLAST_CONFIG.runningStates.indexOf(status) >= 0) {
                 cnt++;
                 td = $(tr.querySelector("td"));
-                window.Agave.api.jobs.getStatus({"jobId":id},
-                    sf,
+                window.Agave.api.jobs.get({"jobId":id},
+                    crf,
                     ef);
             }
         }
@@ -201,7 +226,7 @@
             function(response){
                 var data = JSON.parse(response.data);
                 if(data.status == "success"){
-                    BlastApp.getJobList();
+                    setTimeout(BlastApp.getJobList(), 1500);
                 }
             }, 
             function(err){
@@ -257,6 +282,9 @@
     };
 
     BlastApp.createDownloadLink = function(job, row, archive){
+        if(BLAST_CONFIG.finishedStates.indexOf(job.status) < 0){
+            return;
+        }
         var a;
         var tdspan = row.find(".blast-history-download");
         a = $("<a href=\"" + archive  + "\">Download Results</a>");
@@ -336,7 +364,7 @@
         jhm.append(span);
     };
 
-    BlastApp.filterBy = function(table, filter, coli){
+    BlastApp.filterBy = function(table, filter, coli, showPage){
         var trs = $("tbody tr", table);
         var tr, td, val;
         var re = new RegExp(filter);
@@ -355,8 +383,11 @@
                 tr.removeAttr("data-lvot");
             }
         }
+        table.attr("data-filter", filter);
         var rlength = $("tbody tr[data-lvot!=\"true\"]", table).length;
-        BlastApp.showPage(table, rlength, 10, 1, 1);
+        if(showPage){
+            BlastApp.showPage(table, rlength, 10, 1, 1);
+        }
     };
 
     BlastApp.printTableFilter = function(table, jhc, values, label, name){
@@ -368,7 +399,7 @@
             o = $("<option value=\"" + v.val + "\">" + v.lbl + "</option>");
             select.append(o);
         }
-        select.change(function(){BlastApp.filterBy(table, $(this).val(), 1);});
+        select.change(function(){BlastApp.filterBy(table, $(this).val(), 1, true);});
         jhc.append(lbl);
         jhc.append(select);
     };
@@ -609,6 +640,7 @@
                     jhc.html("");
                     var jhm = appContext.find('.blast-history-meta');
                     var job, ul, i;
+                    $(".blast-job-history-content .job-history-controls").html("");
                     BlastApp.printTableFilter(table, 
                             $(".blast-job-history-content .job-history-controls"),
                             blastTypesFilter, "Filter by Blast Type: ", "blast-filter");
@@ -618,6 +650,9 @@
                             continue;
                         }
                         BlastApp.printJobDetails(job, jhc, jhm);
+                    }
+                    if(table.attr("data-filter")){
+                        BlastApp.filterBy(table, table.attr("data-filter"), 1, false);
                     }
                     BlastApp.showPage(table, data.result.length, 10, 1, page);
                     //ul = BlastApp.buildPager(table, data.result, 10, page);
