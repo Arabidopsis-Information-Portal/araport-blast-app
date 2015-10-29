@@ -6,11 +6,11 @@
 
   //the different blast types and their app IDs
   var blastTypes = {
-    'blastn' : 'ncbi-blastn-2.2.29u6',
-    'blastp':'ncbi-blastp-2.2.29u5',
-    'blastx':'ncbi-blastx-2.2.29u4',
-    'tblastn':'ncbi-tblastn-2.2.29u5',
-    'tblastx':'ncbi-tblastx-2.2.29u4',
+    'blastn' : {app: 'ncbi-blastn-2.2.29u6', dbtype: 'nucl'},
+    'blastp': {app: 'ncbi-blastp-2.2.29u5', dbtype: 'prot'},
+    'blastx': {app: 'ncbi-blastx-2.2.29u4', dbtype: 'prot'},
+    'tblastn': {app: 'ncbi-tblastn-2.2.29u5', dbtype: 'nucl'},
+    'tblastx': {app: 'ncbi-tblastx-2.2.29u4', dbtype: 'nucl'}
   };
 
   var blastTypesFilter = [
@@ -34,6 +34,7 @@
         'archive': true,
         'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP%',
         'archiveSystem': 'araport-storage-00',
+        'metadataName': 'araport.blastdb.index',
         /*
         'notifications': [{
              'url':'username@tacc.utexas.edu',
@@ -126,7 +127,7 @@
                     var archiveUrl = job._links.archiveData.href;
                     archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
                     var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
-                    BlastApp.createDownloadLink(job, ntr, archive);
+                    BlastApp.createDownloadViewLink(job, ntr, archive);
                 }
                 BlastApp.createActionLinks(job, ntr);
                 tr.replaceWith(ntr);
@@ -187,37 +188,77 @@
     };
 
     BlastApp.downloadArchivedResults = function(archive){
-        if(typeof archive !== 'undefined'){
-            var Agave = window.Agave;
-            var outputData;
-            Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':archive},
-                function(output) {
-                    console.log(output);
-                    outputData = output.data;
-                    console.log(outputData);
-                    try {
-                        var isFileSaverSupported = !!new Blob();
-                        if(!isFileSaverSupported) { 
-                            BlastApp.jobError('Sorry, your browser does not support this feature. Please upgrade to a modern browser.'); }
-                    } catch (e) {
-                        BlastApp.jobError('Sorry, your browser does not support this. Please upgrade to a modern browser.');
-                        return;
-                    }
-                    if(typeof outputData === 'undefined') {
-                        BlastApp.jobError('Could not download data.');
-                    }else{
-                        var paths = archive.split("/");
-                        var fileName = paths[paths.length-1] + '_' + paths[paths.length-2].split('-')[1] + '_out.' + BLAST_CONFIG.parameters.format;
-                        window.saveAs(new Blob([outputData]), fileName);
-                    }
-                },
-                function(err) {
-                    console.log('Could not download the results file!');
-                    //todo error handling here
-                    BlastApp.jobError('Could not get resulting output file. ' + err);
-                }
-            );
+        if(typeof archive === 'undefined'){
+            return;
         }
+        var Agave = window.Agave;
+        var outputData;
+        Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':archive},
+            function(output) {
+                console.log(output);
+                outputData = output.data;
+                console.log(outputData);
+                try {
+                    var isFileSaverSupported = !!new Blob();
+                    if(!isFileSaverSupported) { 
+                        BlastApp.jobError('Sorry, your browser does not support this feature. Please upgrade to a modern browser.'); }
+                } catch (e) {
+                    BlastApp.jobError('Sorry, your browser does not support this. Please upgrade to a modern browser.');
+                    return;
+                }
+                if(typeof outputData === 'undefined') {
+                    BlastApp.jobError('Could not download data.');
+                }else{
+                    var paths = archive.split("/");
+                    var fileName = paths[paths.length-1] + '_' + paths[paths.length-2].split('-')[1] + '_out.' + BLAST_CONFIG.parameters.format;
+                    window.saveAs(new Blob([outputData]), fileName);
+                }
+            },
+            function(err) {
+                console.log('Could not download the results file!');
+                //todo error handling here
+                BlastApp.jobError('Could not get resulting output file. ' + err);
+            }
+        );
+    };
+
+    BlastApp.showArchivedResults = function(archive){
+        if(typeof archive == 'undefined'){
+            return;
+        }
+        var Agave = window.Agave;
+        var outputData;
+        Agave.api.files.download({'systemId': BLAST_CONFIG.archiveSystem, 'filePath': archive},
+            function(output){
+                console.log(output);
+                outputData = output.data;
+                console.log(outputData);
+                if(typeof outputData === 'undefined'){
+                    BlastApp.jobError('Could not download data.');
+                    return;
+                }
+                var m = $("<div class='modal fade blast-output-modal'>" +
+                            "<div class='modal-dialog'>" +
+                              "<div class='modal-content'>" +
+                                "<div class='modal-header'>" + 
+                                  "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>" + 
+                                  "<h4 class='modal-title'>Data</h4>" + 
+                                "</div>" + 
+                                "<div class='modal-body'>" + 
+                                    outputData + 
+                                "</div>" + 
+                                "<div class='modal-footer'>" + 
+                                "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>" + 
+                              "</div>" + 
+                            "</div>" + 
+                          "</div>");
+                m.modal('toggle');
+            },
+            function(err){
+                if(console){
+                    console.log(err);
+                }
+            });
     };
 
     BlastApp.manageJob = function(jobId, action){
@@ -281,16 +322,23 @@
         tdspan.append("<br>");
     };
 
-    BlastApp.createDownloadLink = function(job, row, archive){
+    BlastApp.createDownloadViewLink = function(job, row, archive){
         if(BLAST_CONFIG.finishedStates.indexOf(job.status) < 0){
             return;
         }
         var a;
         var tdspan = row.find(".blast-history-download");
-        a = $("<a href=\"" + archive  + "\">Download Results</a>");
+        a = $("<a href=\"" + archive  + "\"><span class='glyphicon glyphicon-save'></span> Download Results</a>");
         a.click(function(e){
             e.preventDefault(); 
             BlastApp.downloadArchivedResults(this.getAttribute("href")); }
+            );
+        tdspan.append(a);
+        tdspan = row.find(".blast-history-view");
+        a = $("<a href=\"" + archive + "\"><span class='glyphicon glyphicon-eye-open'></span> View Results</a>");
+        a.click(function(e){
+            e.preventDefault();
+            BlastApp.showArchivedResults(this.getAttribute("href")); }
             );
         tdspan.append(a);
     };
@@ -324,7 +372,8 @@
                 (de.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
                 + (de.getMinutes()  < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
                 +  "</span></td>" +
-            "<td><span class='blast-history-download'></span></td>" +
+            "<td><span class='blast-history-view blast-result-link'></span>" + 
+            "<span class='blast-history-download blast-result-link'></span></td>" +
             "<td><span class='blast-history-actions'></span></td>" +
             "</tr>");
         return row;
@@ -353,7 +402,7 @@
         //var archive = archiveUrl + '/' + job.name + '.out';
         row = BlastApp.createRow(job);
 
-        BlastApp.createDownloadLink(job, row, archive);
+        BlastApp.createDownloadViewLink(job, row, archive);
 
         BlastApp.createActionLinks(job, row);
 
@@ -504,7 +553,12 @@
         );
     };
 
-    //go fetch the list of available databases from the blast/index.json file on araport-compute-00-storage
+    /*
+    *
+    * Go fetch the list of available databases from the blast/index.json file on araport-compute-00-storage
+    * @deprecated for getDatabasesMetadata
+    *
+    */
     BlastApp.getDatabases = function(Agave) {
         if(BlastApp.databases) { return; }
         appContext.find('.nucleotides').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
@@ -530,6 +584,38 @@
             appContext.find('.nucleotides').html('Unable to find available databases!');
             BlastApp.jobError('Unable to find available databases.');
         });
+    };
+
+    BlastApp.getDatabasesMetadata = function(Agave){
+        appContext.find('.nucl').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
+        Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.metadataName + '"}'}, 
+            function(data){
+                var result = data.obj.result;
+                var dockerDbs, dbs, db, r, v, j, nukes = '', peps = '';
+                dbs = [];
+                for(var i = 0; i < result.length; i++){
+                    r = result[i];
+                    v = r.value;
+                    dockerDbs = v.docker_this.databases;
+                    dbs = dbs.concat(dockerDbs);
+                }
+                dbs.forEach(
+                    function(el){
+                        var dbEl = '<div class="checkbox"><label><input type="checkbox" class="blast-database" value="'+el.filename+'">'+el.label+'</label></div>';
+                        if(el.dbtype === 'nucl') {
+                            nukes += dbEl;
+                        } else {
+                            peps += dbEl;
+                        }
+                    }
+                );
+                BlastApp.databases = dbs;
+                appContext.find('.nucl').html(nukes);
+                appContext.find('.prot').html(peps);
+            }, 
+            function(err){
+                BlastApp.jobError('Unable to retrieve databases.');
+            });
     };
 
     //Check the status of a job by jobId, react appropriately
@@ -787,7 +873,7 @@
     var Agave;
     Agave = window.Agave;
     BlastApp.getProfile(Agave); //get the user info like username
-    BlastApp.getDatabases(Agave); //load the Databases
+    BlastApp.getDatabasesMetadata(Agave); //load the Databases
     BlastApp.getJobList();
   });
 

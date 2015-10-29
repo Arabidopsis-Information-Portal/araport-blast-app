@@ -377,61 +377,27 @@
                     "notes": "Search by combinations of attributes and values. The URL should be constructed with alternating attribute and value fields.",
                     "parameters": [
                         {
-                            "allowMultiple": false,
+                            "allowMultiple": true,
                             "description": "The attribute to query by. This can be any job field.",
                             "name": "attribute",
-                            "paramType": "query",
+                            "paramType": "path",
                             "required": true,
                             "type": "string"
                         },
                         {
-                            "allowMultiple": false,
+                            "allowMultiple": true,
                             "description": "The value of the attribute to query for.",
                             "name": "value",
-                            "paramType": "query",
+                            "paramType": "path",
                             "required": true,
                             "type": "string"
                         }
                     ],
                     "summary": "Find jobs matching the given attribute/value combination(s).",
                     "type": "MultipleJobResponse"
-                },
-                {
-                    "method": "GET",
-                    "nickname": "searchByAppId",
-                    "notes": "Search by appId name.",
-                    "parameters": [
-                        {
-                            "allowMultiple": false,
-                            "description": "The Exact appId value to search for.",
-                            "name": "appId",
-                            "paramType": "query",
-                            "required": true,
-                            "type": "string"
-                        }
-                    ],
-                    "summary": "Find jobs matching the given appId.",
-                    "type": "MultipleJobResponse"
-                },
-                {
-                    "method": "GET",
-                    "nickname": "searchLikeAppId",
-                    "notes": "Search by appId name. Can use wildcards",
-                    "parameters": [
-                        {
-                            "allowMultiple": false,
-                            "description": "The appId value to search for, wild cards are accepted.",
-                            "name": "appId.like",
-                            "paramType": "query",
-                            "required": true,
-                            "type": "string"
-                        }
-                    ],
-                    "summary": "Find jobs matching the given appId. Can use wildcards",
-                    "type": "MultipleJobResponse"
                 }
             ],
-            "path": "/jobs/v2/"
+            "path": "/jobs/v2/{attribute}/{value}"
         }
     ],
     "basePath": "https://api.araport.org",

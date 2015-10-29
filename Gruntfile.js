@@ -152,6 +152,12 @@ module.exports = function(grunt) {
       target: {
         src: [
           'index.html'
+        ],
+        exclude: [
+            'jquery.js',
+            'bootstarp.js',
+            'jquery.min.js',
+            'bootstrap.min.js'
         ]
       }
     },

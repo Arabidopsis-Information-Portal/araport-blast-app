@@ -119,3 +119,15 @@ table.table tbody .blaster-pager-row td{
 .blast-history-wrapper {
     margin-top:20px;
 }
+
+.blast-result-link {
+    display:block;
+    width:100%;
+    text-align:left;
+
+}
+@media (min-width: 768px){
+    .blast-output-modal .modal-dialog {
+        width: 70%;
+    }
+}
