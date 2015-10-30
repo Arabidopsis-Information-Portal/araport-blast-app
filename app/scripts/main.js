@@ -612,6 +612,9 @@
                 BlastApp.databases = dbs;
                 appContext.find('.nucl').html(nukes);
                 appContext.find('.prot').html(peps);
+                appContext.find('.blast-database').change(function(){
+                    BlastApp.enableRunButton();
+                });
             }, 
             function(err){
                 BlastApp.jobError('Unable to retrieve databases.');
@@ -767,6 +770,17 @@
         appContext.find('.job-status .job-status-message').html('Uploading data.');
         var Agave = window.Agave;
 
+        //set BLAST job name
+        var name = appContext.find('#jobName').val();
+        var now = new Date().getTime();
+        BLAST_CONFIG.now = now;
+        name = name.replace('%DATESTAMP%', now);
+        name = name.replace('%BLASTTYPE%', appContext.find('#appId').val());
+        if(console){
+            console.log('Creating BLAST job: ' + name + ' ');
+        }
+        BLAST_CONFIG.name = name;
+
         //grab changed advanced options
         var changedAdvOptions = appContext.find('.advanced-blast-options').find('.form-changed');
         for(var i =0; i < changedAdvOptions.length; i++) {
@@ -776,8 +790,8 @@
 
         //get blast type and add to app instance
         BlastApp.blastType = appContext.find('#appId').val();
-        BLAST_CONFIG.appId = blastTypes[BlastApp.blastType];
-        BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-'+ BlastApp.now + '/' + BlastApp.blastType + '_out';
+        BLAST_CONFIG.appId = blastTypes[BlastApp.blastType].app;
+        BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
 
         //get databases and add to app instance
         var dbs = '';
@@ -867,6 +881,34 @@
         BlastApp.downloadResults();
     });
 
+    BlastApp.checkRunEnable = function(){
+        var dbs = 0;
+        appContext.find('.blast-database:checked').each(function(){
+            dbs++;
+        });
+        if(dbs < 1) {
+            return false;
+        }
+        if(appContext.find('#edit-sequence-input').val().length < 10)
+        {
+            return false;
+        }
+        return true;
+    };
+
+    BlastApp.enableRunButton = function(){
+        if (BlastApp.checkRunEnable()){
+            appContext.find('.form-submit').prop('disabled', false);
+        }else{
+            appContext.find('.form-submit').prop('disabled', true);
+        }
+    };
+    BlastApp.enableRunButton();
+
+    //Check if the user has inputted a sequence and selected a DB
+    appContext.find('#edit-sequence-input').on('input', function(){
+        BlastApp.enableRunButton();
+    });
   /* Initialize Agave */
   window.addEventListener('Agave::ready', function() {
     //var Agave, help, helpItem, helpDetail, methods, methodDetail;

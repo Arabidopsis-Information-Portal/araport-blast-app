@@ -7,6 +7,13 @@
   <div class="blast-submit">
     <form role="form" action="/aip/apps/blast" method="post" id="araport-apps-form" accept-charset="UTF-8">
       <div class="form-group">
+        <label for="jobName">BLAST Job Name</label>
+        <input type="text" id="jobName" name="jobName" class="form-control" value="%BLASTTYPE%-%DATESTAMP%"/>
+        <p class="help-block">
+            Use this to have a more expressive name. You can use the <code>%BLASTTYPE%</code> and <code>%DATESTAMP%</code> variables which will be replaced by the blast type name and the unix date time stamp respectively.
+        </p>
+      </div>
+      <div class="form-group">
         <label for="appId">Select Blast Type</label>
         <select id="appId" class="form-control" title="Blast Type">
           <option value="blastn" selected="true">blastn</option>
@@ -16,9 +23,16 @@
           <option value="tblastx">tblastx</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="width: 100%">
         <label for="edit-sequence-input">Blast Input Sequence</label>
-        <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
+        <div style="width: 20%; display:inline-block; float:left;">
+            <button class="btn btn-warning" style="margin: 5px;" disabled>Paste Sequence</button><br />
+            <button class="btn btn-warning" style="margin: 5px;">Upload Sequence</button><br />
+            <button class="btn btn-warning" style="margin: 5px;">Select Sequence</button><br />
+        </div>
+        <div style="width: 80%; display:inline-block; float:left; margin-bottom:20px;">
+          <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
+        </div>
       </div>
       <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
         <div class="panel-title fieldset-legend panel-heading">Databases</div>
@@ -38,28 +52,6 @@
       <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
         <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
         <div class="panel-body advanced-options-panel collapse">
-          <div class="form-group">
-            <label for="max_target_seqs">Maximum number of aligned sequences to keep</label>
-            <input type="text" id="max_target_seqs" class="form-control" value="500"></input>
-            <p class="help-block">Not valid for outformat <=4</p>
-          </div>
-          <div class="form-group">
-            <label for="gapopen">Cost to open a gap</label>
-            <input type="text" id="gapopen" class="form-control"></input>
-            <p class="help-block">Leave blank to use default value for algorithm</p>
-          </div>
-          <div class="form-group">
-            <label for="lowercase_masking">Use lower case filtering in query and subject sequence(s)</label>
-            <select id="lowercase_masking" class="form-control" title="Use lower case filtering in query and subject sequence(s)">
-              <option value="true">On</option>
-              <option value="false" selected="TRUE">Off</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="penalty">Penalty for a nucleotide mismatch</label>
-            <input type="text" id="penalty" class="form-control"></input>
-            <p class="help-block">Penalty for a mismatch in the BLAST™ portion of run.</p>
-          </div>
           <div class="form-group">
             <label for="evalue">Expectation value (E) threshold for saving hits</label>
             <select id="evalue" class="form-control" title="Expectation">
@@ -84,16 +76,9 @@
             </p>
           </div>
           <div class="form-group">
-            <label for="filter">Filter query sequence(s)</label>
-            <select id="filter" class="form-control">
-              <option value="true" selected="TRUE">On</option>
-              <option value="false">Off</option>
-            </select>
-            <p class="help-block">Filtering masks off segments of the query sequence that have low compositional complexity. DUST for blastn, SEG for others.</p>
-          </div>
-          <div class="form-group">
-            <label for="reward">Reward for a nucleotide match</label>
-            <input type="text" id="reward" class="form-control"></input>
+            <label for="max_target_seqs">Maximum number of aligned sequences to keep</label>
+            <input type="text" id="max_target_seqs" class="form-control" value="500"></input>
+            <p class="help-block">Not valid for outformat <=4</p>
           </div>
           <div class="form-group">
             <label for="format">Format</label>
@@ -105,6 +90,35 @@
               <option value="TABULAR_COMMENTED">TABULAR_COMMENTED</option>
               <option value="ASN1">ASN1</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="gapopen">Cost to open a gap</label>
+            <input type="text" id="gapopen" class="form-control"></input>
+            <p class="help-block">Leave blank to use default value for algorithm</p>
+          </div>
+          <div class="form-group">
+            <label for="lowercase_masking">Use lower case filtering in query and subject sequence(s)</label>
+            <select id="lowercase_masking" class="form-control" title="Use lower case filtering in query and subject sequence(s)">
+              <option value="true">On</option>
+              <option value="false" selected="TRUE">Off</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="penalty">Penalty for a nucleotide mismatch</label>
+            <input type="text" id="penalty" class="form-control"></input>
+            <p class="help-block">Penalty for a mismatch in the BLAST™ portion of run.</p>
+          </div>
+          <div class="form-group">
+            <label for="filter">Filter query sequence(s)</label>
+            <select id="filter" class="form-control">
+              <option value="true" selected="TRUE">On</option>
+              <option value="false">Off</option>
+            </select>
+            <p class="help-block">Filtering masks off segments of the query sequence that have low compositional complexity. DUST for blastn, SEG for others.</p>
+          </div>
+          <div class="form-group">
+            <label for="reward">Reward for a nucleotide match</label>
+            <input type="text" id="reward" class="form-control"></input>
           </div>
           <div class="form-group">
             <label for="wordsize">Word size for wordfinder algorithm</label>
