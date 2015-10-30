@@ -35,8 +35,8 @@
         </div>
       </div>
       <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
-        <div class="panel-title fieldset-legend panel-heading">Databases</div>
-        <div class="panel-body databases-panel">
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Databases</div>
+        <div class="panel-body databases-panel collapse in">
           <div class="row">
             <div class="col-md-6">
               <h4>Select Nucleotide DBs</h4>
@@ -178,12 +178,16 @@
                 <div class="blast-job-history-content">
                     <div class="job-history-controls">
                     </div>
+                    <div class="job-history-message hidden">
+                        <h3>Loading new job(s)... <span class="glyphicon glyphicon-refresh blast-reload-icon"></span></h3>
+                    </div>
                     <div class="table-responsive">
                         <span class="blast-history-message"></span>
                         <table class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Status:</th>
+                                    <th>Name:</th>
                                     <th>Blast Type: </th>
                                     <th>Date Time: </th>
                                     <th>Results: </th>

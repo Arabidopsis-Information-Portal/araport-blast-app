@@ -80,7 +80,7 @@ span.blast-tooltip.north:after {
       left: 100px;
 }
 
-.blast-history-meta ul {
+.blast-tooltip-info ul, .blast-history-meta ul {
     list-style:none;
 }
 

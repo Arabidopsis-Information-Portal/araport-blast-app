@@ -161,7 +161,7 @@
             }
         }
         if(cnt === 0){
-            clearInterval(BlastApp._jobListChecker);
+            //clearInterval(BlastApp._jobListChecker);
 
         }
     };
@@ -170,9 +170,20 @@
         var tr = el.parent().parent().parent();
         var id = tr[0].getAttribute("data-id");
         var status = tr[0].getAttribute("data-status");
-        var span = $(".blast-history-meta span#" + id);
+        var infotr = tr.parent().find('#blast-info-' + id);
+        if(infotr.length > 0){
+            infotr.remove();
+            return;
+        }
+        var span = $('.blast-history-meta span#' + id).clone();
+        infotr = $('<tr id="blast-info-' + id + '">' + 
+                        '<td colspan="6"></td>' + 
+                   '</tr>');
+        infotr.find('td').append(span);
+        tr.after(infotr);
+        span.removeClass('blast-hidden');
+        /*
         if ( span.hasClass("blast-hidden") ){
-            $(".blast-history-meta span").addClass("blast-hidden");
             if(tr.offset().top < span.height()){
                 span.addClass("north");
                 span.css({top: tr.offset().top + tr.height(), left:tr.parent().width() / 2});
@@ -185,6 +196,7 @@
             $(".blast-history-meta span").addClass("blast-hidden");
             span.addClass("blast-hidden");
         }
+        */
     };
 
     BlastApp.downloadArchivedResults = function(archive){
@@ -357,6 +369,7 @@
         var row = $("<tr data-status=" + job.status + " data-id=" + job.id +">" +
             "<td><span class='job-list-icon'>" + icon + "</span> " +
                  "<span class='job-list-status'>" + job.status + "</san></td>" +
+            "<td>" + job.name + "</td>" + 
             "<td>" + job.appId.split('-')[1] + "</td>" +
             "<td><span style=\"font-weight:bold;\">Created:</span><span> " 
                    + ((ds.getMonth() + 1) < 10 ? "0" + (+ds.getMonth() + 1) : (ds.getMonth() + 1))
@@ -380,7 +393,7 @@
     };
 
     BlastApp.createSpanMetadata = function(job){
-        var span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip\">" +
+        var span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip-info\">" +
         "<ul><li><b>ExecutionSystem: </b></li>" + 
         "</li>" + job.executionSystem + "</li>" +
         "<li><b>Job Id: </b></li>" + 
@@ -635,7 +648,7 @@
                     appContext.find('.job-status .job-status-message').html(BlastApp.status);
                     if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
                         console.log('BlastApp.status = ' + BlastApp.status + '. Checking again.');
-                        setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
+                        setTimeout(function() { BlastApp.checkJobStatus(); }, 2500);
                     } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
                         console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
                         BlastApp.updateStatusIcon("error");
@@ -752,7 +765,8 @@
                 BlastApp.jobError('Couldn\'t retrieve job list. Please try again later');
             }
         );
-        BlastApp._jobListChecker = setInterval(BlastApp.checkJobListStatus, 5000);
+        appContext.find('.blast-job-history-panel .job-history-message').addClass('hidden');
+        BlastApp._jobListChecker = setInterval(BlastApp.checkJobListStatus, 2500);
     };
 
     //on form change add class to form element to pick out and add to app description
@@ -764,10 +778,12 @@
     appContext.find('.form-submit').click(function (event) {
         event.preventDefault();//stop form submission
         //clearInterval(BlastApp._jobListChecker);
-        appContext.find('.blast-errors').addClass('hidden');
-        appContext.find('.blast-submit').addClass('hidden');
-        appContext.find('.job-monitor').removeClass('hidden');
+        
+        //appContext.find('.blast-errors').addClass('hidden');
+        //appContext.find('.blast-submit').addClass('hidden');
+        //appContext.find('.job-monitor').removeClass('hidden');
         appContext.find('.job-status .job-status-message').html('Uploading data.');
+        appContext.find('.form-submit').prop('disabled', true);
         var Agave = window.Agave;
 
         //set BLAST job name
@@ -818,6 +834,13 @@
         console.log('uploading ' + inputFileName);
         formData.append('fileToUpload',blob,inputFileName);
 
+        appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');
+        appContext.find('.blast-job-history-panel .panel-body').collapse('toggle');
+        appContext.find('.blast-job-history-panel .panel-title').removeClass('collapsed');
+        $('html, body').animate({
+                scrollTop: $('.blast-job-history-panel').offset().top - 30
+            });
+
         Agave.api.files.importData(
             {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username, fileToUpload: blob, fileName: inputFileName},
             {requestContentType: 'multipart/form-data'},
@@ -835,8 +858,8 @@
                 Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
                     function(jobResponse) { //success
                         console.log('Job Submitted.');
-                        appContext.find('.blast-submit').addClass('hidden');
-                        appContext.find('.job-monitor').removeClass('hidden');
+                        //appContext.find('.blast-submit').addClass('hidden');
+                        //appContext.find('.job-monitor').removeClass('hidden');
                         if(jobResponse.obj.status === 'success') {
 
                             //job successfully submitted, find out the status
@@ -855,7 +878,8 @@
                                     setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                                 }
                             }
-                            setTimeout(function() {BlastApp.getJobList(); }, 6500);
+                            setTimeout(function() {
+                                BlastApp.getJobList(); }, 500);
                         } else {
                             console.log('Job did not successfully submit.', jobResponse.data.message);
                             //todo better error handling here
