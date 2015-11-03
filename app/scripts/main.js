@@ -6,11 +6,11 @@
 
   //the different blast types and their app IDs
   var blastTypes = {
-    'blastn' : {app: 'ncbi-blastn-2.2.29u6', dbtype: 'nucl'},
-    'blastp': {app: 'ncbi-blastp-2.2.29u5', dbtype: 'prot'},
-    'blastx': {app: 'ncbi-blastx-2.2.29u4', dbtype: 'prot'},
-    'tblastn': {app: 'ncbi-tblastn-2.2.29u5', dbtype: 'nucl'},
-    'tblastx': {app: 'ncbi-tblastx-2.2.29u4', dbtype: 'nucl'}
+    'blastn' : {app: 'blastn', dbtype: 'nucl'},
+    'blastp': {app: 'blastp', dbtype: 'prot'},
+    'blastx': {app: 'blastx', dbtype: 'prot'},
+    'tblastn': {app: 'tblastn', dbtype: 'nucl'},
+    'tblastx': {app: 'tblastx', dbtype: 'nucl'}
   };
 
   var blastTypesFilter = [
@@ -35,6 +35,7 @@
         'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP%',
         'archiveSystem': 'araport-storage-00',
         'metadataName': 'araport.blastdb.index',
+        'appMetadataName': 'araport.ncbi-blast.applist',
         /*
         'notifications': [{
              'url':'username@tacc.utexas.edu',
@@ -71,6 +72,9 @@
     BLAST_CONFIG.name = BLAST_CONFIG.name.replace('%DATESTAMP%',now);
 
     /* PRIVATE FUNCTIONS */
+    BlastApp.getUserAppId = function(){
+        return $("[name='appId']:checked").val();
+    };
     BlastApp.updateStatusIcon = function(status){
         var ppc = appContext.find('.job-status .blast-job-status-icon');
         ppc.removeClass('glyphicon-remove glyphicon-ok glyphicon-refresh blast-reload-icon');
@@ -599,6 +603,39 @@
         });
     };
 
+    BlastApp.getAppId = function(Agave){
+        Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.appMetadataName + '"}'},
+            function(data){
+                var result = data.obj.result;
+                var apps, app, r, v, j;
+                apps = [];
+                for(var i = 0; i < result.length; i++){
+                    r = result[i];
+                    v = r.value;
+                    apps = apps.concat(v); 
+                }
+                if(apps.length == 1){
+                    app = apps[0];
+                    return app;
+                }
+                j = Math.floor(Math.random() * apps.length);
+                app = apps[j];
+                return app;
+            },
+            function(err){
+                if(console){
+                    console.log(err);
+                }
+                return "";
+            });
+        return "";
+    };
+
+    BlastApp.setupAppId = function(Agave){
+        var appId = BlastApp.getAppId(Agave);
+        BLAST_CONFIG.appId = appId;
+    };
+
     BlastApp.getDatabasesMetadata = function(Agave){
         appContext.find('.nucl').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
         Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.metadataName + '"}'}, 
@@ -791,7 +828,7 @@
         var now = new Date().getTime();
         BLAST_CONFIG.now = now;
         name = name.replace('%DATESTAMP%', now);
-        name = name.replace('%BLASTTYPE%', appContext.find('#appId').val());
+        name = name.replace('%BLASTTYPE%', BlastApp.getUserAppId());
         if(console){
             console.log('Creating BLAST job: ' + name + ' ');
         }
@@ -805,8 +842,8 @@
         }
 
         //get blast type and add to app instance
-        BlastApp.blastType = appContext.find('#appId').val();
-        BLAST_CONFIG.appId = blastTypes[BlastApp.blastType].app;
+        BlastApp.blastType = BlastApp.getUserAppId();
+        BLAST_CONFIG.parameters.appId = blastTypes[BlastApp.blastType].app;
         BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
 
         //get databases and add to app instance
@@ -835,7 +872,7 @@
         formData.append('fileToUpload',blob,inputFileName);
 
         appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');
-        appContext.find('.blast-job-history-panel .panel-body').collapse('toggle');
+        appContext.find('.blast-job-history-panel .panel-body').collapse('show');
         appContext.find('.blast-job-history-panel .panel-title').removeClass('collapsed');
         $('html, body').animate({
                 scrollTop: $('.blast-job-history-panel').offset().top - 30
@@ -939,6 +976,7 @@
     var Agave;
     Agave = window.Agave;
     BlastApp.getProfile(Agave); //get the user info like username
+    BlastApp.setupAppId(Agave);
     BlastApp.getDatabasesMetadata(Agave); //load the Databases
     BlastApp.getJobList();
   });

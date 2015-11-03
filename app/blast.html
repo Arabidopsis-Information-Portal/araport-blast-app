@@ -15,20 +15,36 @@
       </div>
       <div class="form-group">
         <label for="appId">Select Blast Type</label>
-        <select id="appId" class="form-control" title="Blast Type">
-          <option value="blastn" selected="true">blastn</option>
-          <option value="blastp">blastp</option>
-          <option value="blastx">blastx</option>
-          <option value="tblastn">tblastn</option>
-          <option value="tblastx">tblastx</option>
-        </select>
+        <div class="btn-group" data-toggle="buttons" style="width:100%;">
+            <label class="btn btn-default active">
+                <input type="radio" name="appId" id="app-blastn" value="blastn" autocomplete="off" checked> balstn
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="appId" id="app-blastp" value="blastp" autocomplete="off"> balstp
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="appId" id="app-blastx" value="blastx" autocomplete="off"> balstx
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="appId" id="app-tblastn" value="tblastn" autocomplete="off"> tblastn
+            </label>
+            <label class="btn btn-default">
+                <input type="radio" name="appId" id="app-tblastx" value="tblastx" autocomplete="off"> tblastx
+            </label>
+        </div>
       </div>
-      <div class="form-group" style="width: 100%">
-        <label for="edit-sequence-input">Blast Input Sequence</label>
+      <div class="form-group htab-wrapper" style="width: 100%">
+        <label for="edit-sequence-input" style="width:100%;">Blast Input Sequence</label>
         <div style="width: 20%; display:inline-block; float:left;">
-            <button class="btn btn-warning" style="margin: 5px;" disabled>Paste Sequence</button><br />
-            <button class="btn btn-warning" style="margin: 5px;">Upload Sequence</button><br />
-            <button class="btn btn-warning" style="margin: 5px;">Select Sequence</button><br />
+            <div class="htab">
+                <span>Paste Sequence</span>
+            </div>
+            <div class="htab">
+                <span>Upload Sequence</span>
+            </div>
+            <div class="htab">
+                <span>Select Sequence</span>
+            </div>
         </div>
         <div style="width: 80%; display:inline-block; float:left; margin-bottom:20px;">
           <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>

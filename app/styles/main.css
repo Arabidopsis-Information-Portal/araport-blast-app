@@ -126,6 +126,9 @@ table.table tbody .blaster-pager-row td{
     text-align:left;
 
 }
+
+.htab-wrapper .htabs
+
 @media (min-width: 768px){
     .blast-output-modal .modal-dialog {
         width: 70%;
