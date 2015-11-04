@@ -35,19 +35,29 @@
       </div>
       <div class="form-group htab-wrapper" style="width: 100%">
         <label for="edit-sequence-input" style="width:100%;">Blast Input Sequence</label>
-        <div style="width: 20%; display:inline-block; float:left;">
-            <div class="htab">
-                <span>Paste Sequence</span>
+        <div class="htabs-left">
+            <div class="htab active">
+                <a class="htab-link" href="#" data-target="#paste-seq">Paste Sequence</a>
             </div>
             <div class="htab">
-                <span>Upload Sequence</span>
+                <a class="htab-link" href="#" data-target="#upload-seq">Upload Sequence</a>
             </div>
             <div class="htab">
-                <span>Select Sequence</span>
+                <a class="htab-link" href="#" data-target="#select-seq">Select Sequence</a>
             </div>
         </div>
-        <div style="width: 80%; display:inline-block; float:left; margin-bottom:20px;">
-          <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
+        <div class="htabs-right">
+          <div id="paste-seq" class="htab-target">
+              <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
+          </div>
+          <div id="upload-seq" class="htab-target">
+            <label for="blast-sequence-file">Upload sequence file:</label>
+            <input type="file" name="blast-sequence-file" id="blast-sequence-file" />
+          </div>
+          <div id="select-seq" class="htab-target">
+            <label for="blast-sequence-file">Select sequence file:</label>
+            <input type="file" name="blast-sequence-file" id="blast-sequence-file" />
+          </div>
         </div>
       </div>
       <fieldset class="panel panel-default form-wrapper" id="edit-dbs">

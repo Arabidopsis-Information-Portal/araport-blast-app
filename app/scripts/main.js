@@ -970,6 +970,23 @@
     appContext.find('#edit-sequence-input').on('input', function(){
         BlastApp.enableRunButton();
     });
+
+    //Horizontal Tabs
+    appContext.find(".htab-wrapper .htab-target").hide();
+    var activeTab = appContext.find(".htab-wrapper .htab.active .htab-link");
+    $(".htab-wrapper " + activeTab[0].getAttribute("data-target")).show();
+    appContext.find(".htab-wrapper .htab-link").click(function(e){
+        e.preventDefault();
+        var el = $(this);
+        var links = appContext.find(".htab-wrapper .htab-link");
+        for(var i = 0; i < links.length; i++){
+            $(links[i]).parent().removeClass("active");
+        }
+        el.parent().addClass("active");
+        var target = $("" + this.getAttribute("data-target") + "");
+        $(".htab-wrapper .htab-target").hide();
+        target.show();
+    });
   /* Initialize Agave */
   window.addEventListener('Agave::ready', function() {
     //var Agave, help, helpItem, helpDetail, methods, methodDetail;
