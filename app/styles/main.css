@@ -162,6 +162,15 @@ table.table tbody .blaster-pager-row td{
     border-right:1px solid white;
 }
 
+.white-background {
+    background:white;
+    width:100%;
+    height:100%;
+    text-align:center;
+    border-radius:2px;
+    border:1px solid #ccc;
+}
+
 @media (min-width: 768px){
     .blast-output-modal .modal-dialog {
         width: 70%;

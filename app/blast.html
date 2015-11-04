@@ -51,12 +51,39 @@
               <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
           </div>
           <div id="upload-seq" class="htab-target">
-            <label for="blast-sequence-file">Upload sequence file:</label>
-            <input type="file" name="blast-sequence-file" id="blast-sequence-file" />
+            <div class="white-background" style="height:214px">
+                <label for="blast-sequence-file">Upload sequence file:</label>
+                <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px"/>
+            </div>
           </div>
           <div id="select-seq" class="htab-target">
-            <label for="blast-sequence-file">Select sequence file:</label>
-            <input type="file" name="blast-sequence-file" id="blast-sequence-file" />
+            <div class="white-background" style="height:214px">
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group htab-wrapper" style="width: 100%">
+        <label for="edit-db-input" style="width:100%;">Blast Custom DB</label>
+        <div class="htabs-left">
+            <div class="htab active">
+                <a class="htab-link" href="#" data-target="#upload-db">Upload DB</a>
+            </div>
+            <div class="htab">
+                <a class="htab-link" href="#" data-target="#select-db">Select DB</a>
+            </div>
+        </div>
+        <div class="htabs-right">
+          <div id="upload-db" class="htab-target">
+            <div class="white-background" style="height:214px">
+                <label for="blast-sequence-file">Upload sequence file:</label>
+                <input type="file" name="blast-db-file" id="blast-db-file" style="margin-left:50px"/>
+            </div>
+          </div>
+          <div id="select-db" class="htab-target">
+            <div class="white-background" style="height:214px">
+
+            </div>
           </div>
         </div>
       </div>
@@ -75,9 +102,11 @@
           </div>
         </div>
       </fieldset>
-      <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
-        <div class="panel-body advanced-options-panel collapse">
+      <fieldset title="Blast Options" class="panel panel-default form-wrapper blast-options">
+        <div class="panel-title fieldest-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".blast-options-panel">
+          Blast Options
+        </div>
+        <div class="panel-body blast-options-panel collapse in">
           <div class="form-group">
             <label for="evalue">Expectation value (E) threshold for saving hits</label>
             <select id="evalue" class="form-control" title="Expectation">
@@ -117,6 +146,12 @@
               <option value="ASN1">ASN1</option>
             </select>
           </div>
+
+        </div>
+      </fieldset>
+      <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
+        <div class="panel-body advanced-options-panel collapse">
           <div class="form-group">
             <label for="gapopen">Cost to open a gap</label>
             <input type="text" id="gapopen" class="form-control"></input>
