@@ -382,13 +382,7 @@
                    (ds.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
                    + (ds.getMinutes() < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
                    +  "</span></br>" +
-            "<span style=\"font-weight:bold;\">End Time: </span><span>" 
-                + ((de.getMonth() + 1) < 10 ? "0" + (+ds.getMonth() + 1) : (ds.getMonth() + 1))
-                + "/" + (de.getDate() < 10 ? "0" + ds.getDate() : ds.getDate()) + "/" 
-                + de.getFullYear() + " " + 
-                (de.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
-                + (de.getMinutes()  < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
-                +  "</span></td>" +
+                +  "</td>" +
             "<td><span class='blast-history-view blast-result-link'></span>" + 
             "<span class='blast-history-download blast-result-link'></span></td>" +
             "<td><span class='blast-history-actions'></span></td>" +
@@ -637,11 +631,41 @@
     };
 
     BlastApp.getDatabasesMetadata = function(Agave){
+        var localDbs = localStorage.getItem('blastDBs');
+        var getDbs = true;
+        if(localDbs !== null){
+            var timestamp = new Date().getTime();
+            var tw = timestamp - JSON.parse(localDbs).timestamp;
+            if((tw/1000) < 3600){
+                getDbs = false;
+            }
+        }
         appContext.find('.nucl').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
+        var nukes = '', peps = '';
+        var printDbs = function(element, index, array){
+            index++;
+            var dbstr = '<label class="btn btn-default db-button">' +
+                        '<input type="checkbox" name="blast-dbs" value="' + element.filename + '" autocomplete="off">' + element.label + '</label>';
+            if(element.dbtype === 'nucl'){
+                nukes += dbstr;
+            }else{
+                peps += dbstr;
+            }
+        };
+        if(getDbs){
+        var sortDbs = function(a , b){
+            if(a.dbtype > b.dbtype){
+                return 1;
+            }
+            if(a.dbtype < b.dbtype){
+                return -1;
+            }
+            return 0;
+        };
         Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.metadataName + '"}'}, 
             function(data){
                 var result = data.obj.result;
-                var dockerDbs, dbs, db, r, v, j, nukes = '', peps = '';
+                var dockerDbs, dbs, db, r, v, j;
                 dbs = [];
                 for(var i = 0; i < result.length; i++){
                     r = result[i];
@@ -649,26 +673,29 @@
                     dockerDbs = v.docker_this.databases;
                     dbs = dbs.concat(dockerDbs);
                 }
+                dbs = dbs.sort(sortDbs);
                 dbs.forEach(
-                    function(el){
-                        var dbEl = '<div class="checkbox"><label><input type="checkbox" class="blast-database" value="'+el.filename+'">'+el.label+'</label></div>';
-                        if(el.dbtype === 'nucl') {
-                            nukes += dbEl;
-                        } else {
-                            peps += dbEl;
-                        }
-                    }
+                    printDbs
                 );
                 BlastApp.databases = dbs;
-                appContext.find('.nucl').html(nukes);
-                appContext.find('.prot').html(peps);
-                appContext.find('.blast-database').change(function(){
-                    BlastApp.enableRunButton();
-                });
+                localStorage.setItem('blastDBs', JSON.stringify({timestamp: new Date().getTime(), dbs: BlastApp.databases}));
             }, 
             function(err){
                 BlastApp.jobError('Unable to retrieve databases.');
             });
+        }else{
+            BlastApp.databases = JSON.parse(localDbs).dbs;
+            var nukes = "", peps = "";
+            BlastApp.databases.forEach(
+                    printDbs
+                );
+        }
+        appContext.find('.nucl').html('<div data-toggle="buttons">' + nukes + '</div>');
+        appContext.find('.prot').html('<div data-toggle="buttons">' + peps + '</div>');
+        appContext.find('.blast-database').change(function(){
+            BlastApp.enableRunButton();
+        });
+
     };
 
     //Check the status of a job by jobId, react appropriately
@@ -960,8 +987,14 @@
     BlastApp.enableRunButton = function(){
         if (BlastApp.checkRunEnable()){
             appContext.find('.form-submit').prop('disabled', false);
+            appContext.find('.form-submit').removeClass('disabled');
+            appContext.find('.form-submit').removeClass('btn-default');
+            appContext.find('.form-submit').addClass('btn-success');
         }else{
             appContext.find('.form-submit').prop('disabled', true);
+            appContext.find('.form-submit').removeClass('btn-success');
+            appContext.find('.form-submit').addClass('disabled');
+            appContext.find('.form-submit').addClass('btn-default');
         }
     };
     BlastApp.enableRunButton();
@@ -973,20 +1006,41 @@
 
     //Horizontal Tabs
     appContext.find(".htab-wrapper .htab-target").hide();
-    var activeTab = appContext.find(".htab-wrapper .htab.active .htab-link");
-    $(".htab-wrapper " + activeTab[0].getAttribute("data-target")).show();
+    var htabWrappers = appContext.find(".htab-wrapper");
+    htabWrappers.each(function(){
+        var activeTab;
+        var element = $(this);
+        activeTab = element.find('.htab.active .htab-link');
+        element.find(activeTab[0].getAttribute('data-target')).show();
+    });
     appContext.find(".htab-wrapper .htab-link").click(function(e){
         e.preventDefault();
         var el = $(this);
-        var links = appContext.find(".htab-wrapper .htab-link");
+        var htabWrapper = el.parent().parent().parent();
+        var links = htabWrapper.find(".htab-link");
         for(var i = 0; i < links.length; i++){
             $(links[i]).parent().removeClass("active");
         }
         el.parent().addClass("active");
-        var target = $("" + this.getAttribute("data-target") + "");
-        $(".htab-wrapper .htab-target").hide();
+        var target = htabWrapper.find("" + this.getAttribute("data-target") + "");
+        htabWrapper.find(".htab-target").hide();
         target.show();
     });
+
+    //Checking which blast they choose
+    var showDBType = function(){
+        var checked = appContext.find('[name="appId"]:checked');
+        var DBType = blastTypes[checked.val()].dbtype;
+        if(DBType == "nucl"){
+            appContext.find(".databases-panel .prot-wrapper").hide();
+            appContext.find(".databases-panel .nucl-wrapper").show().removeClass('col-md-6').addClass('col-md-12');
+        }else{
+            appContext.find(".databases-panel .nucl-wrapper").hide();
+            appContext.find(".databases-panel .prot-wrapper").show().removeClass('col-md-6').addClass('col-md-12');
+        }
+    }
+    showDBType();
+    appContext.find('[name="appId"]').change(showDBType);
   /* Initialize Agave */
   window.addEventListener('Agave::ready', function() {
     //var Agave, help, helpItem, helpDetail, methods, methodDetail;

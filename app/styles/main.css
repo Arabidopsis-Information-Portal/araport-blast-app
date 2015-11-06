@@ -171,6 +171,25 @@ table.table tbody .blaster-pager-row td{
     border:1px solid #ccc;
 }
 
+.form-submit {
+    font-size:20px;
+}
+
+.form-submit.disabled {
+    background-color:#efefef;
+}
+
+.db-button {
+    width:25%;
+    margin:0 2px 2px 2px;
+    word-break: break-word;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+    display:inline-block;
+    white-space: normal;
+}
+
 @media (min-width: 768px){
     .blast-output-modal .modal-dialog {
         width: 70%;

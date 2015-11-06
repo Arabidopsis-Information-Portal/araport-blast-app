@@ -15,15 +15,15 @@
       </div>
       <div class="form-group">
         <label for="appId">Select Blast Type</label>
-        <div class="btn-group" data-toggle="buttons" style="width:100%;">
+        <div class="btn-group btn-group-justified" data-toggle="buttons" style="width:100%;">
             <label class="btn btn-default active">
-                <input type="radio" name="appId" id="app-blastn" value="blastn" autocomplete="off" checked> balstn
+                <input type="radio" name="appId" id="app-blastn" value="blastn" autocomplete="off" checked> blastn
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="appId" id="app-blastp" value="blastp" autocomplete="off"> balstp
+                <input type="radio" name="appId" id="app-blastp" value="blastp" autocomplete="off"> blastp
             </label>
             <label class="btn btn-default">
-                <input type="radio" name="appId" id="app-blastx" value="blastx" autocomplete="off"> balstx
+                <input type="radio" name="appId" id="app-blastx" value="blastx" autocomplete="off"> blastx
             </label>
             <label class="btn btn-default">
                 <input type="radio" name="appId" id="app-tblastn" value="tblastn" autocomplete="off"> tblastn
@@ -48,12 +48,13 @@
         </div>
         <div class="htabs-right">
           <div id="paste-seq" class="htab-target">
-              <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="10" placeholder="paste your sequence here"></textarea>
+              <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="File Name"></inputt>
+              <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="8" placeholder="paste your sequence here"></textarea>
           </div>
           <div id="upload-seq" class="htab-target">
-            <div class="white-background" style="height:214px">
-                <label for="blast-sequence-file">Upload sequence file:</label>
-                <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px"/>
+            <div class="white-background" style="height:214px; padding:10px;">
+                <input type="text" class="form-control" name="blast-sequence-upload-name" placeholder="File Name" style="float:right; width:50%;">
+                <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px;"/>
             </div>
           </div>
           <div id="select-seq" class="htab-target">
@@ -63,8 +64,24 @@
           </div>
         </div>
       </div>
-      <div class="form-group htab-wrapper" style="width: 100%">
-        <label for="edit-db-input" style="width:100%;">Blast Custom DB</label>
+      <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Databases</div>
+        <div class="panel-body databases-panel collapse in">
+          <div class="row">
+            <div class="col-md-6 nucl-wrapper">
+              <h4>Select Nucleotide DBs</h4>
+              <div class="form-group nucl"></div>
+            </div>
+            <div class="col-md-6 prot-wrapper">
+              <h4>Select Peptide DBs</h4>
+              <div class="form-group prot"></div>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset class="panel panel-default form-wrapper" id="custom-db">
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".custom-databases-panel">Blast Custom DB</div>
+        <div class="panel-body custom-databases-panel collapse htab-wrapper" style="width: 100%">
         <div class="htabs-left">
             <div class="htab active">
                 <a class="htab-link" href="#" data-target="#upload-db">Upload DB</a>
@@ -76,7 +93,7 @@
         <div class="htabs-right">
           <div id="upload-db" class="htab-target">
             <div class="white-background" style="height:214px">
-                <label for="blast-sequence-file">Upload sequence file:</label>
+                <input type="text" class="form-control" name="blast-customdb-upload-name" placeholder="File Name" style="float:right; width:50%;">
                 <input type="file" name="blast-db-file" id="blast-db-file" style="margin-left:50px"/>
             </div>
           </div>
@@ -86,22 +103,7 @@
             </div>
           </div>
         </div>
-      </div>
-      <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Databases</div>
-        <div class="panel-body databases-panel collapse in">
-          <div class="row">
-            <div class="col-md-6">
-              <h4>Select Nucleotide DBs</h4>
-              <div class="form-group nucl"></div>
-            </div>
-            <div class="col-md-6">
-              <h4>Select Peptide DBs</h4>
-              <div class="form-group prot"></div>
-            </div>
-          </div>
-        </div>
-      </fieldset>
+      </fieldset>     
       <fieldset title="Blast Options" class="panel panel-default form-wrapper blast-options">
         <div class="panel-title fieldest-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".blast-options-panel">
           Blast Options
@@ -215,7 +217,7 @@
         </div>
         <!-- end panel body -->
       </fieldset>
-      <button class="btn btn-primary form-submit"><span class="glyphicon glyphicon-ok"></span> Run Blast</button>
+      <button class="btn btn-default form-submit disabled"><span class="glyphicon glyphicon-send"></span> Run Blast</button>
     </form>
   <!-- end div submit -->
   </div>
