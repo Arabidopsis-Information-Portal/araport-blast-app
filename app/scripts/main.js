@@ -32,8 +32,14 @@
         'processorsPerNode': 1,
         'requestedTime': '00:30:00',
         'archive': true,
-        'archivePath': '%USERNAME/archive/jobs/blast-%DATESTAMP%',
+        'archivePath': '%USERNAME/blastplus/archive/jobs/blast-%DATESTAMP%',
         'archiveSystem': 'araport-storage-00',
+        'mainFolder': 'blastplus',
+        'uploadFolder': 'uploads',
+        'archiveFolder': 'archive',
+        'jobsFolder': 'jobs',
+        'sequencesFolder': 'sequences',
+        'databasesFolder': 'databases',
         'metadataName': 'araport.blastdb.index',
         'appMetadataName': 'araport.ncbi-blast.applist',
         /*
@@ -557,11 +563,75 @@
                 }
                 BlastApp.username = results.obj.result.username;
                 BLAST_CONFIG.archivePath = BLAST_CONFIG.archivePath.replace('%USERNAME',BlastApp.username);
+                BlastApp.prepareFileSystem(Agave);
             }, function(err){
                 console.log('Could not find profile info.', err);
                 BlastApp.jobError('Could not find your profile information.');
             }
         );
+    };
+
+    BlastApp.prepareFileSystem = function(Agave){
+        Agave.api.files.list({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder},
+            function(res){
+                if(console){
+                    console.log(res);
+                }
+            },
+            function(err){
+                console.log('Error', err);
+                if(err.obj.status === 'error'){
+                console.log('Creating Blastplus directory');
+                console.log(err);
+                    Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/', body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.mainFolder + '"}'},
+                     function(res){
+                         console.log('Blastplus directory created');
+                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.uploadFolder + '"}'},
+                    function(res){
+                        console.log('Upload Folder Created');
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.sequencesFolder + '"}'},
+                    function(res){
+                        console.log('Sequences folder created.');
+                    },
+                    function(err){
+                        console.log('Couldn\'t create sequences folder');
+                    });
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.databasesFolder + '"}'},
+                    function(res){
+                        console.log('Databases folder created.');
+                    },
+                    function(err){
+                        console.log('Couldn\'t create databases folder');
+                    });
+                    },
+                     function(err){
+                         console.log('Couldn\'t create upload folder');
+                         console.log(err);
+                     }
+                    );
+                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.archiveFolder + '"}'},
+                    function(res){
+                        console.log('Archive folder created');
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.archiveFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.jobsFolder + '"}'},
+                        function(res){
+                            console.log('Jobs Folder Created');
+                        },
+                        function(err){
+                            console.log('couldn\'t create jobs folder');
+                            console.log(err);
+                        });
+                    },
+                    function(err){
+                        console.log('Couldn\'t create archive folder');
+                        console.log(err);
+                    });
+                },
+                function(err){
+                    console.log('Coundn\'t create blastplus directory');
+                    console.log(err);
+                });
+            }
+       });
     };
 
     /*
@@ -610,10 +680,12 @@
                 }
                 if(apps.length == 1){
                     app = apps[0];
+                    BLAST_CONFIG.appId = app;
                     return app;
                 }
                 j = Math.floor(Math.random() * apps.length);
                 app = apps[j];
+                BLAST_CONFIG.appId = app;
                 return app;
             },
             function(err){
@@ -627,7 +699,7 @@
 
     BlastApp.setupAppId = function(Agave){
         var appId = BlastApp.getAppId(Agave);
-        BLAST_CONFIG.appId = appId;
+        //BLAST_CONFIG.appId = appId;
     };
 
     BlastApp.getDatabasesMetadata = function(Agave){
@@ -685,14 +757,13 @@
             });
         }else{
             BlastApp.databases = JSON.parse(localDbs).dbs;
-            var nukes = "", peps = "";
             BlastApp.databases.forEach(
                     printDbs
                 );
         }
         appContext.find('.nucl').html('<div data-toggle="buttons">' + nukes + '</div>');
         appContext.find('.prot').html('<div data-toggle="buttons">' + peps + '</div>');
-        appContext.find('.blast-database').change(function(){
+        appContext.find('[name="blast-dbs"]').change(function(){
             BlastApp.enableRunButton();
         });
 
@@ -856,6 +927,7 @@
         BLAST_CONFIG.now = now;
         name = name.replace('%DATESTAMP%', now);
         name = name.replace('%BLASTTYPE%', BlastApp.getUserAppId());
+        name = name.replace(/[^0-9A-Z\-_ ]/, '-');
         if(console){
             console.log('Creating BLAST job: ' + name + ' ');
         }
@@ -868,14 +940,23 @@
           BLAST_CONFIG.parameters[changedAdvOptions[i].id] = changedAdvOptions[i].value;
         }
 
+        //grab basic options
+        var blastOptions = appContext.find('.blast-options').find('input, select');
+        var element;
+        for(i = 0; i < blastOptions.length; i++){
+            element = blastOptions[i];
+            console.log(element.id + ' = ' + element.value);
+            BLAST_CONFIG.parameters[element.id] = element.value;
+        }
+
         //get blast type and add to app instance
         BlastApp.blastType = BlastApp.getUserAppId();
-        BLAST_CONFIG.parameters.appId = blastTypes[BlastApp.blastType].app;
+        BLAST_CONFIG.parameters.blast_application = blastTypes[BlastApp.blastType].app;
         BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
 
         //get databases and add to app instance
         var dbs = '';
-        appContext.find('.blast-database:checked').each(function(){
+        appContext.find('[name="blast-dbs"]:checked').each(function(){
             dbs +=$(this).val() + ' ';
         });
         if(dbs.length > 0) {
@@ -890,14 +971,7 @@
             return false;
         }
 
-
-        //upload file from contents of input form text area
-        var blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
-        var formData = new FormData();
-        var inputFileName = BlastApp.now+'.txt';
-        console.log('uploading ' + inputFileName);
-        formData.append('fileToUpload',blob,inputFileName);
-
+        //Show job history
         appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');
         appContext.find('.blast-job-history-panel .panel-body').collapse('show');
         appContext.find('.blast-job-history-panel .panel-title').removeClass('collapsed');
@@ -905,8 +979,25 @@
                 scrollTop: $('.blast-job-history-panel').offset().top - 30
             });
 
-        Agave.api.files.importData(
-            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username, fileToUpload: blob, fileName: inputFileName},
+        //upload file from contents of input form text area
+        var blob, formData, inputFileName, sFile;
+        formData = new FormData();
+        var sequencePaste = $("#edit-sequence-input").val();
+        var sequenceFiles = $('[name="blast-sequence-file"]')[0].files;
+        if(sequencePaste.length > 10 || sequenceFiles.length > 0){
+          if(sequencePaste.length > 10){
+            blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
+            inputFileName = $('[name="blast-paste-sequence-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+          }else{
+            sFile = sequenceFiles[0];
+            blob = sFile;
+            inputFileName = $('[name="blast-sequence-upload-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+          }
+            console.log('uploading ' + inputFileName);
+            formData.append('fileToUpload',blob,inputFileName);
+
+            Agave.api.files.importData(
+            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
             {requestContentType: 'multipart/form-data'},
             function(resp) {
                 //successful upload, but need to check for agave errors
@@ -916,8 +1007,9 @@
                 //actual successful upload.
                 //submit the job
                 appContext.find('.job-status .job-status-message').html('Submitting job.');
-                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + inputFileName;
+                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder + '/' + inputFileName;
                 console.log('submitting job:', BLAST_CONFIG);
+                console.log('submitting job:', JSON.stringify(BLAST_CONFIG));
                 //submit the job
                 Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
                     function(jobResponse) { //success
@@ -962,7 +1054,7 @@
                 return false;
             }
         );
-
+      }
     }); //end click submit
     //event handler for download button click
     appContext.find('.blast-download-button').click( function() {
@@ -970,14 +1062,13 @@
     });
 
     BlastApp.checkRunEnable = function(){
-        var dbs = 0;
-        appContext.find('.blast-database:checked').each(function(){
-            dbs++;
-        });
-        if(dbs < 1) {
+        var sFiles = $('[name="blast-sequence-file"]')[0].files;
+        var dbFiles = $('[name="blast-db-file"]')[0].files;
+        var dbs = appContext.find('[name="blast-dbs"]:checked');
+        if(!dbs.length && !dbFiles.length) {
             return false;
         }
-        if(appContext.find('#edit-sequence-input').val().length < 10)
+        if(appContext.find('#edit-sequence-input').val().length < 10 && !sFiles.length)
         {
             return false;
         }
@@ -986,21 +1077,19 @@
 
     BlastApp.enableRunButton = function(){
         if (BlastApp.checkRunEnable()){
-            appContext.find('.form-submit').prop('disabled', false);
-            appContext.find('.form-submit').removeClass('disabled');
-            appContext.find('.form-submit').removeClass('btn-default');
-            appContext.find('.form-submit').addClass('btn-success');
+            appContext.find('.form-submit').prop('disabled', false).removeClass('disabled').removeClass('btn-default').addClass('btn-success');
         }else{
-            appContext.find('.form-submit').prop('disabled', true);
-            appContext.find('.form-submit').removeClass('btn-success');
-            appContext.find('.form-submit').addClass('disabled');
-            appContext.find('.form-submit').addClass('btn-default');
+            appContext.find('.form-submit').prop('disabled', true).removeClass('btn-success').addClass('disabled').addClass('btn-default');
         }
     };
     BlastApp.enableRunButton();
 
     //Check if the user has inputted a sequence and selected a DB
     appContext.find('#edit-sequence-input').on('input', function(){
+        BlastApp.enableRunButton();
+    });
+
+    appContext.find('[name="blast-sequence-file"]').change(function(){
         BlastApp.enableRunButton();
     });
 
@@ -1067,5 +1156,7 @@
           el.addClass("collapsed");
       }
   });
+
+  //********* FILE BROWSER ************//
 
 })(window, jQuery);
