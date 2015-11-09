@@ -66,9 +66,9 @@
           <div id="select-seq" class="htab-target">
             <div class="white-background" style="height:400px; overflow:auto;">
                 <div class="hidden">
-                  <input type="text" name="sequence-file-selected" value="" class="form-control" />
+                  <input type="text" name="sequence-file-selected" value="" class="form-control file-selected" />
                 </div>
-                <div class="file-browser">
+                <div id="sequence-fb" class="file-browser">
                   <div class="indicator hide">
                     <div class="alert alert-info">
                       <i class="fa fa-spinner fa-spin"></i> Loading
@@ -146,9 +146,9 @@
           <div id="select-db" class="htab-target">
             <div class="white-background" style="height:400px; overflow:auto;">
                 <div class="hidden">
-                  <input type="text" name="sequence-file-selected" value="" class="form-control" />
+                  <input type="text" name="db-file-selected" value="" class="form-control file-selected" />
                 </div>
-                <div class="file-browser">
+                <div id="custom-db-fb" class="file-browser">
                   <div class="indicator hide">
                     <div class="alert alert-info">
                       <i class="fa fa-spinner fa-spin"></i> Loading
@@ -190,7 +190,6 @@
           </div>
         </div>
           </div>
-        </div>
       </fieldset>     
       <fieldset title="Blast Options" class="panel panel-default form-wrapper blast-options">
         <div class="panel-title fieldest-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".blast-options-panel">

@@ -896,7 +896,7 @@
                     //BlastApp.appendPager(table, ul);
                 }
             },
-            function(){
+            function(err){
                 BlastApp.jobError('Couldn\'t retrieve job list. Please try again later');
             }
         );
@@ -1065,10 +1065,12 @@
         var sFiles = $('[name="blast-sequence-file"]')[0].files;
         var dbFiles = $('[name="blast-db-file"]')[0].files;
         var dbs = appContext.find('[name="blast-dbs"]:checked');
-        if(!dbs.length && !dbFiles.length) {
+        var sFileSel = $('[name="sequence-file-selected"]').val();
+        var dbFileSel = $('[name="db-file-selected"]').val();
+        if(!dbs.length && !dbFiles.length && dbFileSel.length < 5) {
             return false;
         }
-        if(appContext.find('#edit-sequence-input').val().length < 10 && !sFiles.length)
+        if(appContext.find('#edit-sequence-input').val().length < 10 && !sFiles.length && sFileSel.length < 5)
         {
             return false;
         }
@@ -1174,7 +1176,7 @@
   var currentUser;
   var systems;
   var currentSystem;
-  var currentFiles;
+  var currentFiles = {};
   var currentPath;
 
   templates.systems = _.template(
@@ -1271,7 +1273,7 @@
     $('a[name="directory-level-up"]', $appContext).on('click', function(e) {
       e.preventDefault();
       $appContext = selectNearestFilebrowser($(this));
-      var path = currentPath.split('/').slice(0, -1).join('/');
+      var path = $appContext.attr('data-current-path').split('/').slice(0, -1).join('/');
       path = path || systemDefaultPath( currentSystem );
       openPath( path );
     });
@@ -1283,7 +1285,7 @@
       var path = $('input[name="current-path"]', $appContext).val();
       path = path || systemDefaultPath( currentSystem );
       openPath( path ).then(false, function(err) {
-        $('input[name="current-path"]', $appContext).val(currentPath);
+        $('input[name="current-path"]', $appContext).val($appContext.attr('data-current-path'));
         showAlert({message: err.obj.message + ': ' + path, type: 'danger', autoDismiss: 3000});
       });
     });
@@ -1302,7 +1304,8 @@
       })
       .then(indicator, indicator);
     } else {
-      currentSystem = currentPath = null;
+      currentSystem  = null;
+      $appContext.attr('data-current-path', '');
       displayFiles();
     }
   }
@@ -1324,21 +1327,26 @@
       if ( files[0].name === '.' ) {
         files.shift();
       }
-      currentFiles = files;
-      $('.display-files', $appContext).html( templates.files( { files: currentFiles, niceFileSize: niceFileSize, fileActions: templates.fileActions, fileSelected: $('input[name="sequence-file-selected"]').val() } ) );
 
+      var ac = $appContext;
+      ac.each(function(){
+        $appContext = $(this);
+        currentFiles[$appContext.attr('id')] = files;
+        $('.display-files', $appContext).html( templates.files( { files: currentFiles[$appContext.attr('id')], niceFileSize: niceFileSize, fileActions: templates.fileActions, fileSelected: $('.file-selected', $appContext.parent()).val() } ) );
+      });
+      $appContext = ac;
       $('button[name="open"]', $appContext).on( 'click', function(e) {
         e.preventDefault();
         $appContext = selectNearestFilebrowser($(this));
         var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
-        openPath( currentFiles[fileIndex].path );
+        openPath( currentFiles[$appContext.attr('id')][fileIndex].path );
       });
 
       $('button[name="preview"]', $appContext).on( 'click', function(e) {
         e.preventDefault();
         $appContext = selectNearestFilebrowser($(this));
         var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
-        previewFile( currentFiles[fileIndex] );
+        previewFile( currentFiles[$appContext.attr('id')][fileIndex] );
       });
 
       $('button[name="download"]', $appContext).on( 'click', function(e) {
@@ -1348,7 +1356,7 @@
         var content = $button.html();
         $button.attr('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
         var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
-        downloadFile( currentFiles[fileIndex] ).then(function() {
+        downloadFile( currentFiles[$appContext.attr('id')][fileIndex] ).then(function() {
           $button.attr('disabled', null).html(content);
         }, function() {
           $button.attr('disabled', null).html(content);
@@ -1361,7 +1369,7 @@
         var $button = $(this);
         if (window.confirm('Are you sure you want to delete this file? This operation cannot be undone.')) {
           var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
-          deleteFile( currentFiles[fileIndex] ).then(function(file) {
+          deleteFile( currentFiles[$appContext.attr('id')][fileIndex] ).then(function(file) {
             $button.closest('tr').remove();
             showAlert({
               message: 'The file ' + file.name + ' has been deleted.',
@@ -1384,13 +1392,23 @@
         $appContext = selectNearestFilebrowser($(this));
         var $button = $(this);
         var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
-        $('input[name="sequence-file-selected"]', $appContext).val(currentFiles[fileIndex].path);
+        $('.file-selected', $appContext.parent()).val(currentFiles[$appContext.attr('id')][fileIndex].path);
         $('.display-files tr', $appContext).each(function(){
             var buttons = $(this.cells[3]);
             buttons.find('button[name="select"]').removeClass('btn-success').addClass('btn-default');
         });
         $button.removeClass('btn-default').addClass('btn-success');
-        $('.help-select-filename', $appContext).text(currentFiles[fileIndex].path);
+        $('.help-select-filename', $appContext.parent()).text(currentFiles[$appContext.attr('id')][fileIndex].path);
+      });
+
+      $('button[name="unselect"]', $appContext).on('click', function(e){
+        e.preventDefault();
+        $appContext = selectNearestFilebrowser($(this));
+        var $button = $(this);
+        var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
+        $('.file-selected', $appContext.parent()).val('');
+        $button.parent().find('button[name="select"]').removeClass('btn-success').addClass('btn-default');
+        $('.help-select-filename', $appContext.parent()).text('');
       });
 
     } else {
@@ -1408,6 +1426,7 @@
         { systemId: currentSystem.id, filePath: path },
         function(resp) {
           currentPath = path;
+          $appContext.attr('data-current-path', path);
           res(resp.obj.result);
         },
         rej
