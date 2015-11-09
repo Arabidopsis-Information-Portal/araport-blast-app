@@ -48,18 +48,64 @@
         </div>
         <div class="htabs-right">
           <div id="paste-seq" class="htab-target">
-              <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="File Name"></inputt>
+              <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="File Name">
               <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="8" placeholder="paste your sequence here"></textarea>
+              <p class="help-block">
+                The sequence that is pasted here will be uploaded into a file in you araport file system under <code>blastplus/uploads/sequences</code> using the file name input value. It will have a unix timestamp appended at the end to avoid overwritting information.
+              </p>
           </div>
           <div id="upload-seq" class="htab-target">
             <div class="white-background" style="height:214px; padding:10px;">
                 <input type="text" class="form-control" name="blast-sequence-upload-name" placeholder="File Name" style="float:right; width:50%;">
                 <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px;"/>
             </div>
+            <p class="help-block">
+              The sequence file that you select will be uploaded into a file in your araport file system under <code>blastplus/uploads/sequences</code> usint the file name input value. It will have a unix timestamp appende at the end to avoid overwritting information.
+            </p>
           </div>
           <div id="select-seq" class="htab-target">
-            <div class="white-background" style="height:214px">
-
+            <div class="white-background" style="height:400px; overflow:auto;">
+                <div class="hidden">
+                  <input type="text" name="sequence-file-selected" value="" class="form-control" />
+                </div>
+                <div class="file-browser">
+                  <div class="indicator hide">
+                    <div class="alert alert-info">
+                      <i class="fa fa-spinner fa-spin"></i> Loading
+                    </div>
+                  </div>
+                  <form name="system-path">
+                    <div class="form-group">
+                      <select class="form-control" name="system">
+                        <option value="">Choose a system to browse</option>
+                      </select>
+                    </div>
+                    <div class="input-group attach-top">
+                      <span class="input-group-addon current-system-id">#</span>
+                      <input type="text" class="form-control" name="current-path" placeholder=""/>
+                      <a class="input-group-addon btn btn-default" name="directory-level-up" title="Up one directory">
+                        <i class="fa fa-level-up"></i>
+                      </a>
+                    </div>
+                  </form>
+                  <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                          <th width="56%">Name</th>
+                          <th width="18%">Type</th>
+                          <th width="10%">Size</th>
+                          <th width="16%">Actions</th>
+                        </thead>
+                        <tbody class="display-files">
+                        </tbody>
+                    </table>
+                  </div>
+                </div>
+            <p class="help-block">
+              Select a file to choose as an input by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file.
+              <br />
+              File currently selected: <code class="help-select-filename"></code>.
+            </p>
             </div>
           </div>
         </div>
@@ -98,9 +144,51 @@
             </div>
           </div>
           <div id="select-db" class="htab-target">
-            <div class="white-background" style="height:214px">
-
+            <div class="white-background" style="height:400px; overflow:auto;">
+                <div class="hidden">
+                  <input type="text" name="sequence-file-selected" value="" class="form-control" />
+                </div>
+                <div class="file-browser">
+                  <div class="indicator hide">
+                    <div class="alert alert-info">
+                      <i class="fa fa-spinner fa-spin"></i> Loading
+                    </div>
+                  </div>
+                  <form name="system-path">
+                    <div class="form-group">
+                      <select class="form-control" name="system">
+                        <option value="">Choose a system to browse</option>
+                      </select>
+                    </div>
+                    <div class="input-group attach-top">
+                      <span class="input-group-addon current-system-id">#</span>
+                      <input type="text" class="form-control" name="current-path" placeholder=""/>
+                      <a class="input-group-addon btn btn-default" name="directory-level-up" title="Up one directory">
+                        <i class="fa fa-level-up"></i>
+                      </a>
+                    </div>
+                  </form>
+                  <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                          <th width="56%">Name</th>
+                          <th width="18%">Type</th>
+                          <th width="10%">Size</th>
+                          <th width="16%">Actions</th>
+                        </thead>
+                        <tbody class="display-files">
+                        </tbody>
+                    </table>
+                  </div>
+                </div>
+            <p class="help-block">
+              Select a file to choose as an input by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file.
+              <br />
+              File currently selected: <code class="help-select-filename"></code>.
+            </p>
             </div>
+          </div>
+        </div>
           </div>
         </div>
       </fieldset>     

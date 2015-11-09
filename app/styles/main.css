@@ -190,6 +190,11 @@ table.table tbody .blaster-pager-row td{
     white-space: normal;
 }
 
+.file-browser {
+    padding:10px;
+
+}
+
 @media (min-width: 768px){
     .blast-output-modal .modal-dialog {
         width: 70%;
