@@ -909,6 +909,145 @@
         $(event.target).addClass('form-changed');
     });
 
+    function submitBlastJob(Agave){
+        Agave = window.Agave;
+        Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
+            function(jobResponse) { //success
+                console.log('Job Submitted.');
+                //appContext.find('.blast-submit').addClass('hidden');
+                //appContext.find('.job-monitor').removeClass('hidden');
+                if(jobResponse.obj.status === 'success') {
+
+                    //job successfully submitted, find out the status
+                    BlastApp.jobId = jobResponse.obj.result.id;
+                    BlastApp.status = jobResponse.obj.result.status;
+                    //is the job done? (unlikely)
+                    if(BlastApp.status === 'FINISHED') {
+                        console.log('job immediately finished');
+                        BlastApp.updateStatusIcon("success");
+                        BlastApp.jobFinished(jobResponse.obj.result);
+                    } else { //more likely we need to poll the status
+                        BlastApp.status = jobResponse.obj.result.status;
+                        appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
+                        if((BlastApp.status === 'PENDING')) {
+                            BlastApp.updateStatusIcon("pending");
+                            setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
+                        }
+                    }
+                    setTimeout(function() {
+                        BlastApp.getJobList(); }, 500);
+                } else {
+                    console.log('Job did not successfully submit.', jobResponse.data.message);
+                    //todo better error handling here
+                    BlastApp.jobError('Job did not successfully submit. ' + jobResponse.data.message);
+                }
+            } ,
+            function(err) { //fail
+                //agave.api failed
+                console.log('Job did not successfully submit.', err);
+                BlastApp.jobError('Job did not successfully submit.', err);
+            }
+        );
+    }
+
+    function uploadSelectSequence(Agave){
+        //upload file from contents of input form text area
+        Agave = window.Agave;
+        var blob, formData, inputFileName, sFile, upload = true;
+        formData = new FormData();
+        var sequencePaste = $("#edit-sequence-input").val();
+        var sequenceFiles = $('[name="blast-sequence-file"]')[0].files;
+        var sFilesSel = $('[name="sequence-file-selected"]').val();
+        if(sequencePaste.length > 10 || sequenceFiles.length > 0 || sFilesSel.length > 5){
+          if(sequencePaste.length > 10){
+            blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
+            inputFileName = $('[name="blast-paste-sequence-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+          }else if (sequenceFiles.length > 0){
+            sFile = sequenceFiles[0];
+            blob = sFile;
+            inputFileName = $('[name="blast-sequence-upload-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+          }else {
+            upload = false;
+            BLAST_CONFIG.inputs.query = 'agave://araport-storage-00' + appContext.find('[name="sequence-file-selected"]').val();
+          }
+          if(upload){
+            console.log('uploading ' + inputFileName);
+            formData.append('fileToUpload',blob,inputFileName);
+
+            Agave.api.files.importData(
+            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
+            {requestContentType: 'multipart/form-data'},
+            function(resp) {
+                //successful upload, but need to check for agave errors
+                if(resp.obj.status !== 'success') {
+                    BlastApp.jobError('Could not upload file. ' + resp.obj.message);
+                }
+                //actual successful upload.
+                //submit the job
+                appContext.find('.job-status .job-status-message').html('Submitting job.');
+                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder + '/' + inputFileName;
+                console.log('submitting job:', BLAST_CONFIG);
+                console.log('submitting job:', JSON.stringify(BLAST_CONFIG));
+                //submit the job
+                submitBlastJob(Agave);
+
+            }, function() {
+                BlastApp.jobError('Could not upload file.');
+                return false;
+            }
+        );
+          } else {
+              submitBlastJob(Agave);
+          }
+      }else {
+          BlastApp.jobError('No sequence file/input configured');
+      }
+
+    }
+
+    function uploadSelectDb(Agave){
+        //get databases and add to app instance
+        var dbs = '';
+        appContext.find('[name="blast-dbs"]:checked').each(function(){
+            dbs +=$(this).val() + ' ';
+        });
+        var cdb = appContext.find('[name="blast-db-file"]')[0].files;
+        var sdb = appContext.find('[name="db-file-selected"]').val();
+        var formData = new FormData();
+        if(dbs.length > 0 || cdb.length > 0 || sdb.length > 5 ) {
+            if(dbs.length > 0){
+                BLAST_CONFIG.parameters.database = dbs;
+                uploadSelectSequence();
+            } else if (cdb.length) {
+                var blob = cdb[0];
+                var fileName = $('[name="blast-customdb-upload-name"]', appContext).val() + '_' + BlastApp.blastType + '-' + BlastApp.now;
+                formData.append('fileToUpload', blob, fileName);
+                Agave.api.files.importData(
+                {systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.databasesFolder, fileToUpload: blob,fileName: fileName},
+                {requestContentType: 'multipart/form-data'},
+                function(resp){
+                    uploadSelectSequence(Agave);
+                },
+                function(err){
+                    console.log('Error uploading DB: ', err);
+                    BlastApp.jobError('There was an error uploading your DB, please try again');
+                }
+                );
+            } else {
+                BLAST_CONFIG.parameters.database = 'agave://araport-storage-00' + $('[name="db-file-selected"]', appContext).val();
+                uploadSelectSequence(Agave);
+            }
+        } else {
+            //todo error saying you have to select at least one DB
+            $('.databases-panel').addClass('text-danger');
+            appContext.find('.blast-submit').removeClass('hidden');
+            appContext.find('.job-monitor').addClass('hidden');
+            BlastApp.jobError('You must select at least one database.');
+            $(window).scrollTop(0, 'slow');
+            return false;
+        }
+    }
+
     //submit form
     appContext.find('.form-submit').click(function (event) {
         event.preventDefault();//stop form submission
@@ -954,23 +1093,6 @@
         BLAST_CONFIG.parameters.blast_application = blastTypes[BlastApp.blastType].app;
         BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
 
-        //get databases and add to app instance
-        var dbs = '';
-        appContext.find('[name="blast-dbs"]:checked').each(function(){
-            dbs +=$(this).val() + ' ';
-        });
-        if(dbs.length > 0) {
-            BLAST_CONFIG.parameters.database = dbs;
-        } else {
-            //todo error saying you have to select at least one DB
-            $('.databases-panel').addClass('text-danger');
-            appContext.find('.blast-submit').removeClass('hidden');
-            appContext.find('.job-monitor').addClass('hidden');
-            BlastApp.jobError('You must select at least one database.');
-            $(window).scrollTop(0, 'slow');
-            return false;
-        }
-
         //Show job history
         appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');
         appContext.find('.blast-job-history-panel .panel-body').collapse('show');
@@ -978,83 +1100,7 @@
         $('html, body').animate({
                 scrollTop: $('.blast-job-history-panel').offset().top - 30
             });
-
-        //upload file from contents of input form text area
-        var blob, formData, inputFileName, sFile;
-        formData = new FormData();
-        var sequencePaste = $("#edit-sequence-input").val();
-        var sequenceFiles = $('[name="blast-sequence-file"]')[0].files;
-        if(sequencePaste.length > 10 || sequenceFiles.length > 0){
-          if(sequencePaste.length > 10){
-            blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
-            inputFileName = $('[name="blast-paste-sequence-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
-          }else{
-            sFile = sequenceFiles[0];
-            blob = sFile;
-            inputFileName = $('[name="blast-sequence-upload-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
-          }
-            console.log('uploading ' + inputFileName);
-            formData.append('fileToUpload',blob,inputFileName);
-
-            Agave.api.files.importData(
-            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
-            {requestContentType: 'multipart/form-data'},
-            function(resp) {
-                //successful upload, but need to check for agave errors
-                if(resp.obj.status !== 'success') {
-                    BlastApp.jobError('Could not upload file. ' + resp.obj.message);
-                }
-                //actual successful upload.
-                //submit the job
-                appContext.find('.job-status .job-status-message').html('Submitting job.');
-                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder + '/' + inputFileName;
-                console.log('submitting job:', BLAST_CONFIG);
-                console.log('submitting job:', JSON.stringify(BLAST_CONFIG));
-                //submit the job
-                Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
-                    function(jobResponse) { //success
-                        console.log('Job Submitted.');
-                        //appContext.find('.blast-submit').addClass('hidden');
-                        //appContext.find('.job-monitor').removeClass('hidden');
-                        if(jobResponse.obj.status === 'success') {
-
-                            //job successfully submitted, find out the status
-                            BlastApp.jobId = jobResponse.obj.result.id;
-                            BlastApp.status = jobResponse.obj.result.status;
-                            //is the job done? (unlikely)
-                            if(BlastApp.status === 'FINISHED') {
-                                console.log('job immediately finished');
-                                BlastApp.updateStatusIcon("success");
-                                BlastApp.jobFinished(jobResponse.obj.result);
-                            } else { //more likely we need to poll the status
-                                BlastApp.status = jobResponse.obj.result.status;
-                                appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
-                                if((BlastApp.status === 'PENDING')) {
-                                    BlastApp.updateStatusIcon("pending");
-                                    setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
-                                }
-                            }
-                            setTimeout(function() {
-                                BlastApp.getJobList(); }, 500);
-                        } else {
-                            console.log('Job did not successfully submit.', jobResponse.data.message);
-                            //todo better error handling here
-                            BlastApp.jobError('Job did not successfully submit. ' + jobResponse.data.message);
-                        }
-                    } ,
-                    function(err) { //fail
-                        //agave.api failed
-                        console.log('Job did not successfully submit.', err);
-                        BlastApp.jobError('Job did not successfully submit.', err);
-                    }
-                );
-
-            }, function() {
-                BlastApp.jobError('Could not upload file.');
-                return false;
-            }
-        );
-      }
+        uploadSelectDb(Agave);
     }); //end click submit
     //event handler for download button click
     appContext.find('.blast-download-button').click( function() {
