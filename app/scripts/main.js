@@ -1,4 +1,3 @@
-/* jshint quotmark:false, eqeqeq:false, laxbreak:true, unused:false */
 (function(window, $, undefined) {
   'use strict';
 
@@ -34,14 +33,6 @@
         'archive': true,
         'archivePath': '%USERNAME/blastplus/archive/jobs/blast-%DATESTAMP%',
         'archiveSystem': 'araport-storage-00',
-        'mainFolder': 'blastplus',
-        'uploadFolder': 'uploads',
-        'archiveFolder': 'archive',
-        'jobsFolder': 'jobs',
-        'sequencesFolder': 'sequences',
-        'databasesFolder': 'databases',
-        'metadataName': 'araport.blastdb.index',
-        'appMetadataName': 'araport.ncbi-blast.applist',
         /*
         'notifications': [{
              'url':'username@tacc.utexas.edu',
@@ -58,16 +49,53 @@
             'filter':true,
             'lowercase_masking':false
         },
-        'inputs': {
-                    'query': 'mock/test.nt.fa'
-        }
+        'inputs': {}
     };
 
-    BLAST_CONFIG.runningStates  = ['PENDING', 'STAGING_INPUTS', 'CLEANING_UP', 'ARCHIVING', 'STAGING_JOB', 'RUNNING', 'PAUSED', 'QUEUED', 'SUBMITTING', 'STAGED', 'PROCESSING_INPUTS', 'ARCHIVING_FINISHED'];
-    BLAST_CONFIG.errorStates    = ['KILLED', 'FAILED', 'STOPPED','ARCHIVING_FAILED'];
+    var BlastApp = {
+        'mainFolder': 'blastplus',
+        'uploadFolder': 'uploads',
+        'archiveFolder': 'archive',
+        'jobsFolder': 'jobs',
+        'sequencesFolder': 'sequences',
+        'databasesFolder': 'databases',
+        'metadataName': 'araport.blastdb.index',
+        'appMetadataName': 'araport.ncbi-blast.applist',
+        'runningStates': ['PENDING', 'STAGING_INPUTS', 'CLEANING_UP', 'ARCHIVING', 'STAGING_JOB', 'RUNNING', 'PAUSED', 'QUEUED', 'SUBMITTING', 'STAGED', 'PROCESSING_INPUTS', 'ARCHIVING_FINISHED'],
+        'errorStates': ['KILLED', 'FAILED', 'STOPPED','ARCHIVING_FAILED'],
+        'finishedStates': ['FINISHED'],
+        'jobLifecycle': {
+                'DELETED': {'desc': 'The job was deleted', 'prog': 0},
+                'FAILED': {'desc': 'The job failed due to an error', 'prog': 0},
+                'KILLED': {'desc': 'The job was killed by user request', 'prog': 0},
+                'CREATED': {'desc': 'The job was created', 'prog': 5},
+                'PENDING': {'desc': 'The job was Accepted by the Agave API', 'prog': 10},
+                'PROCESSING_INPUTS': {'desc': 'Availability of job input files is being verified', 'prog': 15},
+                'STAGING_INPUTS': {'desc': 'Job input files are being copied to the compute host', 'prog': 20},
+                'SUBMITTING': {'desc': 'The job is being prepared for execution on the compute host', 'prog': 25},
+                'STAGING_JOB': {'desc': 'Applications assets are being copied to the compute host', 'prog': 30},
+                'STAGED': {'desc': 'Job input files were copied to the compute system', 'prog': 35},
+                'QUEUED': {'desc': 'The job has been placed into queue to be completed', 'prog': 40},
+                'PAUSED': {'desc': 'The job was paused by user request', 'prog': 45},
+                'RUNNING': {'desc': 'The job is running on the compute host', 'prog': 50},
+                'STOPPED': {'desc': 'The job was intentionally stopped', 'prog': 50},
+                'CLEANING_UP': {'desc': 'The job completed on the compute host', 'prog': 60},
+                'ARCHIVING': {'desc': 'Job output files are being copied to a storage host', 'prog': 70},
+                'ARCHIVING_FAILED': {'desc': 'Job output files were not copied to a storage host due to an error', 'prog': 70},
+                'ARCHIVING_FINISHED': {'desc': 'Job output files have been copied to a storage host', 'prog': 80},
+                'FINISHED': {'desc': 'The job is completed', 'prog': 100},
+                'HEARTBEAT': {'desc': 'The job sent a heartbeat notice', 'prog': -1},
+                'PERMISSION_GRANT': {'desc': 'A user permission was granted on this job', 'prog': -1},
+                'PERMISSION_REVOKE': {'desc': 'A user permission was removed from this job', 'prog': -1},
+                'UPDATED': {'desc': 'The job was updated', 'prog': -1}
+            }
+    };
+/*
+    BLAST_CONFIG.runningStates  = ;
+    BLAST_CONFIG.errorStates    = ;
     BLAST_CONFIG.finishedStates = ['FINISHED'];
-
     var BlastApp = {}; //info dumping ground 
+*/
     //using date and time as an identifier. probably should switch this to a uuid or something 
     if (!Date.now) { 
         Date.now = function() { return new Date().getTime(); }; 
@@ -79,19 +107,19 @@
 
     /* PRIVATE FUNCTIONS */
     BlastApp.getUserAppId = function(){
-        return $("[name='appId']:checked").val();
+        return $('[name="appId"]:checked').val();
     };
     BlastApp.updateStatusIcon = function(status){
         var ppc = appContext.find('.job-status .blast-job-status-icon');
         ppc.removeClass('glyphicon-remove glyphicon-ok glyphicon-refresh blast-reload-icon');
         switch(status){
-            case "pending":
+            case 'pending':
                 ppc.addClass('glyphicon-refresh blast-reload-icon');
                 break;
-            case "error":
+            case 'error':
                 ppc.addClass('glyphicon-remove');
                 break;
-            case "success":
+            case 'success':
                 ppc.addClass('glyphicon-ok');
                 break;
         }
@@ -103,25 +131,25 @@
         var tr, status, id, newStatus, td, icon, cnt;
         var sf = function(response){
             var data = JSON.parse(response.data);
-            if(data.status === "success"){
+            if(data.status === 'success'){
                 newStatus = data.result.status;
-                tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
-                td = $(tr.find("td")[0]);
-                if(BLAST_CONFIG.errorStates.indexOf(newStatus) >= 0) {
+                tr = $(tbody).find('tr[data-id=' + data.result.id + ']');
+                td = $(tr.find('td')[0]);
+                if(BlastApp.errorStates.indexOf(newStatus) >= 0) {
                     icon = td.find('.job-list-icon span');
                     icon.removeClass('glyphicon-refresh blast-reload-icon glyphicon-remove');
                     icon.addClass('glyphicon-remove');
                     icon.attr('style', 'color:red;');
                     tr.attr('data-status', newStatus);
                     td.find('.job-list-status').text(newStatus);
-                }else if(BLAST_CONFIG.finishedStates.indexOf(newStatus) >= 0) {
+                }else if(BlastApp.finishedStates.indexOf(newStatus) >= 0) {
                     icon = td.find('.job-list-icon span');
                     icon.removeClass('glyphicon-ok blast-reload-icon glyphicon-remove glyphicon-refresh');
                     icon.addClass('glyphicon-ok');
                     icon.attr('style', 'color:green;');
                     tr.attr('data-status', newStatus);
                     td.find('.job-list-status').text(newStatus);
-                }else if(BLAST_CONFIG.runningStates.indexOf(newStatus) >= 0) {
+                }else if(BlastApp.runningStates.indexOf(newStatus) >= 0) {
                     tr.attr('data-status', newStatus);
                     td.find('.job-list-status').text(newStatus);
                 }
@@ -131,9 +159,9 @@
             var data = JSON.parse(response.data);
             if(data.status === 'success'){
                 var job = data.result;
-                tr = $(tbody).find("tr[data-id=" + data.result.id + "]");
+                tr = $(tbody).find('tr[data-id=' + data.result.id + ']');
                 var ntr = BlastApp.createRow(job);
-                if(BLAST_CONFIG.finishedStates.indexOf(job.status) >= 0) {
+                if(BlastApp.finishedStates.indexOf(job.status) >= 0) {
                     var archiveUrl = job._links.archiveData.href;
                     archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
                     var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
@@ -145,15 +173,15 @@
         };
         var eef = function(err){
             /*Print the error to the console*/
-            if(console){console.log("Error getting job status: ", err);}
+            if(console){console.log('Error getting job status: ', err);}
         };
         var ef = function(err){
             /*If a job is pending Agave.api.jobs.get({"jobId":"id"}) will return a 404.
             This means that we can only now the status of the job using getStatus*/
             if(console){
-                console.log("Error getting job , let's try gettin just the status ", err);
+                console.log('Error getting job , let\'s try gettin just the status ', err);
             }
-            window.Agave.api.jobs.getStatus({"jobId": id}, 
+            window.Agave.api.jobs.getStatus({'jobId': id}, 
                 sf,
                 eef);
         };
@@ -162,10 +190,10 @@
             tr = trs[i];
             status = tr.getAttribute('data-status');
             id = tr.getAttribute('data-id');
-            if(BLAST_CONFIG.runningStates.indexOf(status) >= 0) {
+            if(BlastApp.runningStates.indexOf(status) >= 0) {
                 cnt++;
-                td = $(tr.querySelector("td"));
-                window.Agave.api.jobs.get({"jobId":id},
+                td = $(tr.querySelector('td'));
+                window.Agave.api.jobs.get({'jobId':id},
                     crf,
                     ef);
             }
@@ -178,8 +206,8 @@
 
     BlastApp.showTooltip = function(el){
         var tr = el.parent().parent().parent();
-        var id = tr[0].getAttribute("data-id");
-        var status = tr[0].getAttribute("data-status");
+        var id = tr[0].getAttribute('data-id');
+        //var status = tr[0].getAttribute('data-status');
         var infotr = tr.parent().find('#blast-info-' + id);
         if(infotr.length > 0){
             infotr.remove();
@@ -231,7 +259,7 @@
                 if(typeof outputData === 'undefined') {
                     BlastApp.jobError('Could not download data.');
                 }else{
-                    var paths = archive.split("/");
+                    var paths = archive.split('/');
                     var fileName = paths[paths.length-1] + '_' + paths[paths.length-2].split('-')[1] + '_out.' + BLAST_CONFIG.parameters.format;
                     window.saveAs(new Blob([outputData]), fileName);
                 }
@@ -245,7 +273,7 @@
     };
 
     BlastApp.showArchivedResults = function(archive){
-        if(typeof archive == 'undefined'){
+        if(typeof archive === 'undefined'){
             return;
         }
         var Agave = window.Agave;
@@ -259,21 +287,21 @@
                     BlastApp.jobError('Could not download data.');
                     return;
                 }
-                var m = $("<div class='modal fade blast-output-modal'>" +
-                            "<div class='modal-dialog'>" +
-                              "<div class='modal-content'>" +
-                                "<div class='modal-header'>" + 
-                                  "<button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>" + 
-                                  "<h4 class='modal-title'>Data</h4>" + 
-                                "</div>" + 
-                                "<div class='modal-body'>" + 
+                var m = $('<div class="modal fade blast-output-modal">' +
+                            '<div class="modal-dialog">' +
+                              '<div class="modal-content">' +
+                                '<div class="modal-header">' + 
+                                  '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + 
+                                  '<h4 class="modal-title">Data</h4>' + 
+                                '</div>' + 
+                                '<div class="modal-body">' + 
                                     outputData + 
-                                "</div>" + 
-                                "<div class='modal-footer'>" + 
-                                "<button type='button' class='btn btn-default' data-dismiss='modal'>Close</button>" + 
-                              "</div>" + 
-                            "</div>" + 
-                          "</div>");
+                                '</div>' + 
+                                '<div class="modal-footer">' + 
+                                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' + 
+                              '</div>' + 
+                            '</div>' + 
+                          '</div>');
                 m.modal('toggle');
             },
             function(err){
@@ -285,15 +313,15 @@
 
     BlastApp.manageJob = function(jobId, action){
         var Agave = window.Agave;
-        Agave.api.jobs.manage({'jobId': jobId, 'body':"{\"action\":\"" + action + "\"}"}, 
+        Agave.api.jobs.manage({'jobId': jobId, 'body':'{"action":"' + action + '"}'}, 
             function(response){
                 var data = JSON.parse(response.data);
-                if(data.status == "success"){
+                if(data.status ===  'success'){
                     setTimeout(BlastApp.getJobList(), 1500);
                 }
             }, 
             function(err){
-                BlastApp.jobError("There was an error resubmitting the job, please refresh and try again.");
+                BlastApp.jobError('There was an error resubmitting the job, please refresh and try again.');
                 if(console){
                     console.log(err.reason);
                 }
@@ -301,112 +329,122 @@
     };
 
     BlastApp.createActionLinks = function(job, row){
-        var tdspan = row.find(".blast-history-actions");
-        var a = $("<a href=\"#\">" + 
-              "<span class=\"glyphicon glyphicon-refresh\"></span> " + 
-              "<span>Resubmit</span>" +
-              "</a>");
+        var tdspan = row.find('.blast-history-actions');
+        var a = $('<a href="#">' + 
+              '<span class="glyphicon glyphicon-refresh"></span>' + 
+              '<span>Resubmit</span>' +
+              '</a>');
         a.click(function(e){
             e.preventDefault();
             var el = $(this);
-            var jobId = el.parent().parent().parent().attr("data-id");
+            var jobId = el.parent().parent().parent().attr('data-id');
             el.find('.glyphicon').addClass('blast-reload-icon');
-            BlastApp.manageJob(jobId, "resubmit");
+            BlastApp.manageJob(jobId, 'resubmit');
         });
         tdspan.append(a);
-        tdspan.append("<br>");
+        tdspan.append('<br>');
 
-        if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
-            a = $("<a href=\"#\">" + 
-                  "<span class=\"glyphicon glyphicon-stop\"></span> " + 
-                  "<span>Stop</span>" +
-                  "</a>");
+        if(BlastApp.runningStates.indexOf(job.status) >= 0) {
+            a = $('<a href="#">' + 
+                  '<span class="glyphicon glyphicon-stop"></span>' + 
+                  '<span>Stop</span>' +
+                  '</a>');
             a.click(function(e){
                 e.preventDefault();
                 var el = $(this);
-                var jobId = el.parent().parent().parent().attr("data-id");
+                var jobId = el.parent().parent().parent().attr('data-id');
                 el.find('.glyphicon').addClass('blast-reload-icon');
-                BlastApp.manageJob(jobId, "stop");
+                BlastApp.manageJob(jobId, 'stop');
             });
             tdspan.append(a);
-            tdspan.append("<br>");
+            tdspan.append('<br>');
         }
 
-        a = $("<a href=\"#\">" +
-              "<span class=\"glyphicon glyphicon-info-sign\"></span>" +
-              "<span> More Info</span>" +
-              "</a>");
+        a = $('<a href="#">' +
+              '<span class="glyphicon glyphicon-info-sign"></span>' +
+              '<span> More Info</span>' +
+              '</a>');
         a.click(function(e){
             e.preventDefault();
             BlastApp.showTooltip($(this));
         });
         tdspan.append(a);
-        tdspan.append("<br>");
+        tdspan.append('<br>');
     };
 
     BlastApp.createDownloadViewLink = function(job, row, archive){
-        if(BLAST_CONFIG.finishedStates.indexOf(job.status) < 0){
+        if(BlastApp.finishedStates.indexOf(job.status) < 0){
             return;
         }
         var a;
-        var tdspan = row.find(".blast-history-download");
-        a = $("<a href=\"" + archive  + "\"><span class='glyphicon glyphicon-save'></span> Download Results</a>");
+        var tdspan = row.find('.blast-history-download');
+        a = $('<a href="' + archive  + '"><span class="glyphicon glyphicon-save"></span> Download Results</a>');
         a.click(function(e){
             e.preventDefault(); 
-            BlastApp.downloadArchivedResults(this.getAttribute("href")); }
+            BlastApp.downloadArchivedResults(this.getAttribute('href')); }
             );
         tdspan.append(a);
-        tdspan = row.find(".blast-history-view");
-        a = $("<a href=\"" + archive + "\"><span class='glyphicon glyphicon-eye-open'></span> View Results</a>");
+        tdspan = row.find('.blast-history-view');
+        a = $('<a href="' + archive + '"><span class="glyphicon glyphicon-eye-open"></span> View Results</a>');
         a.click(function(e){
             e.preventDefault();
-            BlastApp.showArchivedResults(this.getAttribute("href")); }
+            BlastApp.showArchivedResults(this.getAttribute('href')); }
             );
         tdspan.append(a);
     };
 
     BlastApp.createRow = function(job){
         var ds = new Date(job.created);
-        var de = new Date(job.endTime);
+        //var de = new Date(job.endTime);
         var icon;
-         if(BLAST_CONFIG.runningStates.indexOf(job.status) >= 0) {
-            icon = "<span class='glyphicon glyphicon-refresh blast-reload-icon'></span>";
-        } else if(BLAST_CONFIG.errorStates.indexOf(job.status) >= 0) {
-            icon = "<span class='glyphicon glyphicon-remove' style='color:red'></span>";
-        } else if(BLAST_CONFIG.finishedStates.indexOf(job.status) >=0) {
-            icon = "<span class='glyphicon glyphicon-ok' style='color:green'></span>";
+         if(BlastApp.runningStates.indexOf(job.status) >= 0) {
+            icon = '<span class="glyphicon glyphicon-refresh blast-reload-icon"></span>';
+        } else if(BlastApp.errorStates.indexOf(job.status) >= 0) {
+            icon = '<span class="glyphicon glyphicon-remove" style="color:red"></span>';
+        } else if(BlastApp.finishedStates.indexOf(job.status) >=0) {
+            icon = '<span class="glyphicon glyphicon-ok" style="color:green"></span>';
         }
-        var row = $("<tr data-status=" + job.status + " data-id=" + job.id +">" +
-            "<td><span class='job-list-icon'>" + icon + "</span> " +
-                 "<span class='job-list-status'>" + job.status + "</san></td>" +
-            "<td>" + job.name + "</td>" + 
-            "<td>" + job.appId.split('-')[1] + "</td>" +
-            "<td><span style=\"font-weight:bold;\">Created:</span><span> " 
-                   + ((ds.getMonth() + 1) < 10 ? "0" + (+ds.getMonth() + 1) : (ds.getMonth() + 1))
-                   + "/" + (ds.getDate() < 10 ? "0" + ds.getDate() : ds.getDate()) + "/" 
-                   + ds.getFullYear() + " " + 
-                   (ds.getHours() < 10 ? "0" + ds.getHours() : ds.getHours()) + ":" 
-                   + (ds.getMinutes() < 10 ? "0" + ds.getMinutes() : ds.getMinutes())
-                   +  "</span></br>" +
-                +  "</td>" +
-            "<td><span class='blast-history-view blast-result-link'></span>" + 
-            "<span class='blast-history-download blast-result-link'></span></td>" +
-            "<td><span class='blast-history-actions'></span></td>" +
-            "</tr>");
+        var row = $('<tr data-status="' + job.status + '" data-id="' + job.id +'">' +
+            '<td><span class="job-list-icon">' + icon + '</span>' +
+                 '<span class="job-list-status">' + job.status + '</san></td>' +
+            '<td>' + job.name + '</td>' + 
+            '<td>' + job.appId.split('-')[1] + '</td>' +
+            '<td><span> ' + 
+                   ((ds.getMonth() + 1) < 10 ? '0' + (+ds.getMonth() + 1) : (ds.getMonth() + 1)) +
+                   '/' + (ds.getDate() < 10 ? '0' + ds.getDate() : ds.getDate()) + '/' +
+                   ds.getFullYear() + ' ' + 
+                   (ds.getHours() < 10 ? '0' + ds.getHours() : ds.getHours()) + ':' +
+                   (ds.getMinutes() < 10 ? '0' + ds.getMinutes() : ds.getMinutes()) +
+                   '</span>' +
+                  '</td>' +
+            '<td><span class="blast-history-view blast-result-link"></span>' + 
+            '<span class="blast-history-download blast-result-link"></span></td>' +
+            '<td><span class="blast-history-actions"></span></td>' +
+            '</tr>');
         return row;
     };
 
     BlastApp.createSpanMetadata = function(job){
-        var span = $("<span id=" + job.id + " class=\"blast-hidden blast-tooltip-info\">" +
-        "<ul><li><b>ExecutionSystem: </b></li>" + 
-        "</li>" + job.executionSystem + "</li>" +
-        "<li><b>Job Id: </b></li>" + 
-        "<li>" + job.id + "</li>" +
-        "<li><b>App Id: </b></li>" +
-        "<li>" + job.appId + "</li>" +
-        "<li><b>Name: </b></li>" +
-        "<li>" + job.name + "</li>" +
-        "</span>");
+        var Agave = window.Agave;
+        var jobDet, inputs, parameters;
+        Agave.api.jobs.get({jobId: job.id}, 
+            function(resp){
+                jobDet = resp.result;
+                inputs = jobDet.inputs;
+                parameters = jobDet.parameters;
+            },
+            function(){
+                console.log('couldn\'t retrieve job ' + job.id);
+            });
+        var span = $('<span id=' + job.id + ' class="blast-hidden blast-tooltip-info">' +
+        '<ul>' +
+        '<li><b>Job Id: </b></li>' + 
+        '<li>' + job.id + '</li>' +
+        '<li><b>App Id: </b></li>' +
+        '<li>' + job.appId + '</li>' +
+        '</ul>' +
+        '</span>');
+        //var inputsul = $('<ul></ul>');
         return span;
     };
 
@@ -431,9 +469,9 @@
     };
 
     BlastApp.filterBy = function(table, filter, coli, showPage){
-        var trs = $("tbody tr", table);
-        var tr, td, val;
-        var re = new RegExp(filter);
+        var trs = $('tbody tr', table);
+        var tr, val;
+        //var re = new RegExp(filter);
         for(var i = 0; i < trs.length; i++){
             tr = trs[i];
             if(tr.cells.length < coli || i === trs.length - 1){
@@ -443,26 +481,26 @@
             tr = $(tr);
             if (!val.match(filter)){
                 tr.hide();
-                tr.attr("data-lvot", "true");
+                tr.attr('data-lvot', 'true');
             }else{
                 //tr.show();
-                tr.removeAttr("data-lvot");
+                tr.removeAttr('data-lvot');
             }
         }
-        table.attr("data-filter", filter);
-        var rlength = $("tbody tr[data-lvot!=\"true\"]", table).length;
+        table.attr('data-filter', filter);
+        var rlength = $('tbody tr[data-lvot!="true"]', table).length;
         if(showPage){
             BlastApp.showPage(table, rlength, 10, 1, 1);
         }
     };
 
     BlastApp.printTableFilter = function(table, jhc, values, label, name){
-        var select = $("<select name=\"" + name + "\" id=\"" + name + "\"></select>");
-        var lbl = $("<label for=\"" + name + "\">" + label + "</label>");
+        var select = $('<select name="' + name + '" id="' + name + '"></select>');
+        var lbl = $('<label for="' + name + '">' + label + '</label>');
         var v, o;
         for(var i =0; i < values.length; i++){
             v = values[i];
-            o = $("<option value=\"" + v.val + "\">" + v.lbl + "</option>");
+            o = $('<option value="' + v.val + '">' + v.lbl + '</option>');
             select.append(o);
         }
         select.change(function(){BlastApp.filterBy(table, $(this).val(), 1, true);});
@@ -471,16 +509,16 @@
     };
 
     BlastApp.appendPager = function(table, pager){
-        var row = $(".blaster-pager-row", table);
+        var row = $('.blaster-pager-row', table);
         var cell;
         var append = false;
         if(row.length <= 0){
-            row = $("<tr class=\"blaster-pager-row\" data-lvot=\"true\"></tr>");
-            cell = $("<td colspan=\"5\"></td>");
+            row = $('<tr class="blaster-pager-row" data-lvot="true"></tr>');
+            cell = $('<td colspan="5"></td>');
             row.append(cell);
             append = true;
         }else{
-            cell = $("td", row);
+            cell = $('td', row);
         }
         cell.append(pager);
         if(append){
@@ -490,62 +528,62 @@
     };
 
     BlastApp.showPage = function(table, rlength, pageLength, curPage, page){
-        $("tbody tr[data-lvot!=\"true\"]", table).hide();
-        var trs = $("tbody tr[data-lvot!=\"true\"]", table);
+        $('tbody tr[data-lvot!="true"]', table).hide();
+        var trs = $('tbody tr[data-lvot!="true"]', table);
         var tr;
         for(var i = (page - 1) * pageLength; i < ((page - 1) * pageLength + (pageLength - 1)) && i < (page * pageLength); i++){
             tr = $(trs[i]);
             tr.show();
         }
         curPage = +page;
-        $(".blaster-pager", table).remove();
+        $('.blaster-pager', table).remove();
         var ul = BlastApp.buildPager(table, rlength, pageLength, curPage);
         BlastApp.appendPager(table, ul);
     };
 
     BlastApp.buildPager = function(table, rlength, pageLength, curPage){
         var pages = Math.ceil(rlength / pageLength);
-        var ul = $("<ul class=\"blaster-pager\"></ul>");
+        var ul = $('<ul class="blaster-pager"></ul>');
         
         if(pages < 2){ return ul; }
 
-        ul.append("<li><a href=\"previous\">Previous</a></li>");
-        if(curPage == 1){
-            ul.append("<li><span>1</span></li>");
+        ul.append('<li><a href="previous">Previous</a></li>');
+        if(curPage === 1){
+            ul.append('<li><span>1</span></li>');
         }else{
-            ul.append("<li " + (curPage == 1? "class=\"selected\"" : "") + "><a href=\"1\">1</a></li>");
+            ul.append('<li ' + (curPage === 1? 'class="selected"' : '') + '><a href="1">1</a></li>');
         }
-        if(curPage - 2 != 1 && curPage - 2 > 1){
-            ul.append("<li><span>...</span></li>");
+        if(curPage - 2 !== 1 && curPage - 2 > 1){
+            ul.append('<li><span>...</span></li>');
         }
-        if(curPage - 1 != 1 && curPage - 1 > 1){
-            ul.append("<li><a href=\"" + (curPage - 1) + "\">" + (curPage - 1) + "</a></li>");
+        if(curPage - 1 !== 1 && curPage - 1 > 1){
+            ul.append('<li><a href="' + (curPage - 1) + '">' + (curPage - 1) + '</a></li>');
         }
-        if(curPage != 1 && curPage != pages) {
-            ul.append("<li><span>" + curPage + "</span></li>");
+        if(curPage !== 1 && curPage !== pages) {
+            ul.append('<li><span>' + curPage + '</span></li>');
         }
-        if(curPage + 1 != pages && curPage + 1 < pages){
-            ul.append("<li><a href=\"" + (curPage + 1) + "\">" + (curPage + 1) + "</a></li>");
+        if(curPage + 1 !== pages && curPage + 1 < pages){
+            ul.append('<li><a href="' + (curPage + 1) + '">' + (curPage + 1) + '</a></li>');
         }
-        if(curPage + 2 != pages && curPage + 2 < pages){
-            ul.append("<li><span>...</span></li>");
+        if(curPage + 2 !== pages && curPage + 2 < pages){
+            ul.append('<li><span>...</span></li>');
         }
-        if(curPage == pages){
-            ul.append("<li><span>" + pages + "</span></li>");
+        if(curPage === pages){
+            ul.append('<li><span>' + pages + '</span></li>');
         }else{
-            ul.append("<li " + (curPage == pages? "class=\"selected\"" : "") + "><a href=\"" + pages + "\">" + pages + "</a></li>");
+            ul.append('<li ' + (curPage === pages? 'class="selected"' : '') + '><a href="' + pages + '">' + pages + '</a></li>');
         }
-        ul.append("<li><a href=\"next\">Next</a></li>");
-        $("a", ul).click(function(e){
+        ul.append('<li><a href=i"next">Next</a></li>');
+        $('a', ul).click(function(e){
             e.preventDefault();
             var page = $(this).attr('href');
-            if (page == 'previous' && curPage - 1 > 0){
+            if (page === 'previous' && curPage - 1 > 0){
                 page = curPage - 1;
-            }else if(page == 'previous' && curPage - 1 <= 0){
+            }else if(page === 'previous' && curPage - 1 <= 0){
                page = 1;
-            }else if(page == 'next' && curPage + 1 <= pages){
+            }else if(page === 'next' && curPage + 1 <= pages){
                 page = curPage + 1;
-            }else if(page == 'next' && curPage + 1 > pages){
+            }else if(page === 'next' && curPage + 1 > pages){
                 page = pages;
             }
             BlastApp.showPage(table, rlength, pageLength, curPage, page);
@@ -572,7 +610,7 @@
     };
 
     BlastApp.prepareFileSystem = function(Agave){
-        Agave.api.files.list({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder},
+        Agave.api.files.list({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder},
             function(res){
                 if(console){
                     console.log(res);
@@ -583,37 +621,37 @@
                 if(err.obj.status === 'error'){
                 console.log('Creating Blastplus directory');
                 console.log(err);
-                    Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/', body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.mainFolder + '"}'},
-                     function(res){
+                    Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/', body: '{"action": "mkdir", "path": "' + BlastApp.mainFolder + '"}'},
+                     function(){
                          console.log('Blastplus directory created');
-                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.uploadFolder + '"}'},
-                    function(res){
+                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder, body: '{"action": "mkdir", "path": "' + BlastApp.uploadFolder + '"}'},
+                    function(){
                         console.log('Upload Folder Created');
-                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.sequencesFolder + '"}'},
-                    function(res){
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder, body: '{"action": "mkdir", "path": "' + BlastApp.sequencesFolder + '"}'},
+                    function(){
                         console.log('Sequences folder created.');
                     },
-                    function(err){
+                    function(){
                         console.log('Couldn\'t create sequences folder');
                     });
-                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.databasesFolder + '"}'},
-                    function(res){
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder, body: '{"action": "mkdir", "path": "' + BlastApp.databasesFolder + '"}'},
+                    function(){
                         console.log('Databases folder created.');
                     },
-                    function(err){
+                    function(){
                         console.log('Couldn\'t create databases folder');
                     });
                     },
-                     function(err){
+                     function(){
                          console.log('Couldn\'t create upload folder');
                          console.log(err);
                      }
                     );
-                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.archiveFolder + '"}'},
-                    function(res){
+                         Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder, body: '{"action": "mkdir", "path": "' + BlastApp.archiveFolder + '"}'},
+                    function(){
                         console.log('Archive folder created');
-                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.archiveFolder, body: '{"action": "mkdir", "path": "' + BLAST_CONFIG.jobsFolder + '"}'},
-                        function(res){
+                        Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.archiveFolder, body: '{"action": "mkdir", "path": "' + BlastApp.jobsFolder + '"}'},
+                        function(){
                             console.log('Jobs Folder Created');
                         },
                         function(err){
@@ -668,7 +706,7 @@
     };
 
     BlastApp.getAppId = function(Agave){
-        Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.appMetadataName + '"}'},
+        Agave.api.meta.listMetadata({q: '{name: "' + BlastApp.appMetadataName + '"}'},
             function(data){
                 var result = data.obj.result;
                 var apps, app, r, v, j;
@@ -678,7 +716,7 @@
                     v = r.value;
                     apps = apps.concat(v); 
                 }
-                if(apps.length == 1){
+                if(apps.length === 1){
                     app = apps[0];
                     BLAST_CONFIG.appId = app;
                     return app;
@@ -692,13 +730,14 @@
                 if(console){
                     console.log(err);
                 }
-                return "";
+                return '';
             });
-        return "";
+        return '';
     };
 
     BlastApp.setupAppId = function(Agave){
         var appId = BlastApp.getAppId(Agave);
+        console.log('appId: ', appId);
         //BLAST_CONFIG.appId = appId;
     };
 
@@ -715,6 +754,7 @@
         appContext.find('.nucl').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
         var nukes = '', peps = '';
         var printDbs = function(element, index, array){
+            console.log('Array: ', array);
             index++;
             var dbstr = '<label class="btn btn-default db-button">' +
                         '<input type="checkbox" name="blast-dbs" value="' + element.filename + '" autocomplete="off">' + element.label + '</label>';
@@ -734,15 +774,17 @@
             }
             return 0;
         };
-        Agave.api.meta.listMetadata({q: '{name: "' + BLAST_CONFIG.metadataName + '"}'}, 
+        Agave.api.meta.listMetadata({q: '{name: "' + BlastApp.metadataName + '"}'}, 
             function(data){
                 var result = data.obj.result;
-                var dockerDbs, dbs, db, r, v, j;
+                var dockerDbs, dbs, r, v;
                 dbs = [];
                 for(var i = 0; i < result.length; i++){
                     r = result[i];
                     v = r.value;
-                    dockerDbs = v.docker_this.databases;
+                    //jshint -W069
+                    dockerDbs = v['docker_this'].databases;
+                    //jshint +W069
                     dbs = dbs.concat(dockerDbs);
                 }
                 dbs = dbs.sort(sortDbs);
@@ -752,7 +794,7 @@
                 BlastApp.databases = dbs;
                 localStorage.setItem('blastDBs', JSON.stringify({timestamp: new Date().getTime(), dbs: BlastApp.databases}));
             }, 
-            function(err){
+            function(){
                 BlastApp.jobError('Unable to retrieve databases.');
             });
         }else{
@@ -773,7 +815,7 @@
     BlastApp.checkJobStatus = function() {
         console.log('BlastApp.status = ' + BlastApp.status);
         var Agave = window.Agave;
-        if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
+        if(BlastApp.runningStates.indexOf(BlastApp.status) >= 0) {
             //appContext.find('.job-status').html('Checking...');
             Agave.api.jobs.getStatus({'jobId' : BlastApp.jobId},
                 //call success function
@@ -781,15 +823,15 @@
                     //todo check json.obj.status === 'success'
                     BlastApp.status = json.obj.result.status;
                     appContext.find('.job-status .job-status-message').html(BlastApp.status);
-                    if(BLAST_CONFIG.runningStates.indexOf(BlastApp.status) >= 0) {
+                    if(BlastApp.runningStates.indexOf(BlastApp.status) >= 0) {
                         console.log('BlastApp.status = ' + BlastApp.status + '. Checking again.');
                         setTimeout(function() { BlastApp.checkJobStatus(); }, 2500);
-                    } else if(BLAST_CONFIG.errorStates.indexOf(BlastApp.status) >= 0) {
-                        console.log('found ' + BlastApp.status + ' in BLAST_CONFIG.errorStates ' + BLAST_CONFIG.errorStates + ' with indexOf=' + BLAST_CONFIG.errorStates.indexOf(BlastApp.status));
-                        BlastApp.updateStatusIcon("error");
+                    } else if(BlastApp.errorStates.indexOf(BlastApp.status) >= 0) {
+                        console.log('found ' + BlastApp.status + ' in BlastApp.errorStates ' + BlastApp.errorStates + ' with indexOf=' + BlastApp.errorStates.indexOf(BlastApp.status));
+                        BlastApp.updateStatusIcon('error');
                         BlastApp.jobError('Job status is ' + BlastApp.status);
-                    } else if(BLAST_CONFIG.finishedStates.indexOf(BlastApp.status) >=0) {
-                        BlastApp.updateStatusIcon("success");
+                    } else if(BlastApp.finishedStates.indexOf(BlastApp.status) >=0) {
+                        BlastApp.updateStatusIcon('success');
                         BlastApp.jobFinished(json.obj.result);
                     } else {
                         console.log('unknown job state! =' + BlastApp.status);
@@ -874,29 +916,29 @@
                         page = 1;
                     }
                     var jhc = table.find('tbody');
-                    jhc.html("");
+                    jhc.html('');
                     var jhm = appContext.find('.blast-history-meta');
-                    var job, ul, i;
-                    $(".blast-job-history-content .job-history-controls").html("");
+                    var job, i;
+                    $('.blast-job-history-content .job-history-controls').html('');
                     BlastApp.printTableFilter(table, 
-                            $(".blast-job-history-content .job-history-controls"),
-                            blastTypesFilter, "Filter by Blast Type: ", "blast-filter");
+                            $('.blast-job-history-content .job-history-controls'),
+                            blastTypesFilter, 'Filter by Blast Type: ', 'blast-filter');
                     for(i = 0; i < data.result.length; i++){
                         job = data.result[i];
-                        if(job.appId.indexOf("blas") < 0){
+                        if(job.appId.indexOf('blas') < 0){
                             continue;
                         }
                         BlastApp.printJobDetails(job, jhc, jhm);
                     }
-                    if(table.attr("data-filter")){
-                        BlastApp.filterBy(table, table.attr("data-filter"), 1, false);
+                    if(table.attr('data-filter')){
+                        BlastApp.filterBy(table, table.attr('data-filter'), 1, false);
                     }
                     BlastApp.showPage(table, data.result.length, 10, 1, page);
                     //ul = BlastApp.buildPager(table, data.result, 10, page);
                     //BlastApp.appendPager(table, ul);
                 }
             },
-            function(err){
+            function(){
                 BlastApp.jobError('Couldn\'t retrieve job list. Please try again later');
             }
         );
@@ -924,13 +966,13 @@
                     //is the job done? (unlikely)
                     if(BlastApp.status === 'FINISHED') {
                         console.log('job immediately finished');
-                        BlastApp.updateStatusIcon("success");
+                        BlastApp.updateStatusIcon('success');
                         BlastApp.jobFinished(jobResponse.obj.result);
                     } else { //more likely we need to poll the status
                         BlastApp.status = jobResponse.obj.result.status;
                         appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
                         if((BlastApp.status === 'PENDING')) {
-                            BlastApp.updateStatusIcon("pending");
+                            BlastApp.updateStatusIcon('pending');
                             setTimeout(function() { BlastApp.checkJobStatus(); }, 5000);
                         }
                     }
@@ -955,7 +997,7 @@
         Agave = window.Agave;
         var blob, formData, inputFileName, sFile, upload = true;
         formData = new FormData();
-        var sequencePaste = $("#edit-sequence-input").val();
+        var sequencePaste = $('#edit-sequence-input').val();
         var sequenceFiles = $('[name="blast-sequence-file"]')[0].files;
         var sFilesSel = $('[name="sequence-file-selected"]').val();
         if(sequencePaste.length > 10 || sequenceFiles.length > 0 || sFilesSel.length > 5){
@@ -975,7 +1017,7 @@
             formData.append('fileToUpload',blob,inputFileName);
 
             Agave.api.files.importData(
-            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
+            {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
             {requestContentType: 'multipart/form-data'},
             function(resp) {
                 //successful upload, but need to check for agave errors
@@ -985,7 +1027,7 @@
                 //actual successful upload.
                 //submit the job
                 appContext.find('.job-status .job-status-message').html('Submitting job.');
-                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.sequencesFolder + '/' + inputFileName;
+                BLAST_CONFIG.inputs.query = 'agave://araport-storage-00/'+BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.sequencesFolder + '/' + inputFileName;
                 console.log('submitting job:', BLAST_CONFIG);
                 console.log('submitting job:', JSON.stringify(BLAST_CONFIG));
                 //submit the job
@@ -1020,12 +1062,16 @@
                 uploadSelectSequence();
             } else if (cdb.length) {
                 var blob = cdb[0];
-                var fileName = $('[name="blast-customdb-upload-name"]', appContext).val() + '_' + BlastApp.blastType + '-' + BlastApp.now;
+                var cfn = $('[name="blast-customdb-upload-name"]', appContext).val();
+                var fileName = cfn === '' ? blob.name.substring(0, blob.name.lastIndexOf('.')) : cfn;
+                fileName +=  '_' + BlastApp.blastType + '-' + BlastApp.now;
                 formData.append('fileToUpload', blob, fileName);
                 Agave.api.files.importData(
-                {systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BLAST_CONFIG.mainFolder + '/' + BLAST_CONFIG.uploadFolder + '/' + BLAST_CONFIG.databasesFolder, fileToUpload: blob,fileName: fileName},
+                {systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.databasesFolder, fileToUpload: blob,fileName: fileName},
                 {requestContentType: 'multipart/form-data'},
-                function(resp){
+                function(){
+                    BLAST_CONFIG.parameters.database = '';
+                    BLAST_CONFIG.inputs.customDatabase = 'agave://araport-storage-00/' + BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.databasesFolder + '/' + fileName;
                     uploadSelectSequence(Agave);
                 },
                 function(err){
@@ -1034,7 +1080,8 @@
                 }
                 );
             } else {
-                BLAST_CONFIG.parameters.database = 'agave://araport-storage-00' + $('[name="db-file-selected"]', appContext).val();
+                BLAST_CONFIG.parameters.database = '';
+                BLAST_CONFIG.inputs.customDatabase = 'agave://araport-storage-00' + $('[name="db-file-selected"]', appContext).val();
                 uploadSelectSequence(Agave);
             }
         } else {
@@ -1057,16 +1104,16 @@
         //appContext.find('.blast-submit').addClass('hidden');
         //appContext.find('.job-monitor').removeClass('hidden');
         appContext.find('.job-status .job-status-message').html('Uploading data.');
-        appContext.find('.form-submit').prop('disabled', true);
+        appContext.find('.form-submit').prop('disabled', true).removeClass('btn-success').addClass('btn-default');
         var Agave = window.Agave;
 
         //set BLAST job name
         var name = appContext.find('#jobName').val();
         var now = new Date().getTime();
-        BLAST_CONFIG.now = now;
-        name = name.replace('%DATESTAMP%', now);
+        BlastApp.now = now;
+        name = name.search(/%DATESTAMP%/) > -1 ? name.replace('%DATESTAMP%', now) : name + now;
         name = name.replace('%BLASTTYPE%', BlastApp.getUserAppId());
-        name = name.replace(/[^0-9A-Z\-_ ]/, '-');
+        name = name.replace(/[^0-9A-Z\-_ a-z]+/, '-');
         if(console){
             console.log('Creating BLAST job: ' + name + ' ');
         }
@@ -1090,7 +1137,9 @@
 
         //get blast type and add to app instance
         BlastApp.blastType = BlastApp.getUserAppId();
-        BLAST_CONFIG.parameters.blast_application = blastTypes[BlastApp.blastType].app;
+        //jshint -W069
+        BLAST_CONFIG.parameters['blast_application'] = blastTypes[BlastApp.blastType].app;
+        //jshint +W069
         BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
 
         //Show job history
@@ -1141,26 +1190,34 @@
         BlastApp.enableRunButton();
     });
 
+    appContext.find('[name="blast-db-file"]').change(function(){
+        BlastApp.enableRunButton();
+    });
+
+    appContext.find('[name="db-file-selected"]').change(function(){
+        BlastApp.enableRunButton();
+    });
+
     //Horizontal Tabs
-    appContext.find(".htab-wrapper .htab-target").hide();
-    var htabWrappers = appContext.find(".htab-wrapper");
+    appContext.find('.htab-wrapper .htab-target').hide();
+    var htabWrappers = appContext.find('.htab-wrapper');
     htabWrappers.each(function(){
         var activeTab;
         var element = $(this);
         activeTab = element.find('.htab.active .htab-link');
         element.find(activeTab[0].getAttribute('data-target')).show();
     });
-    appContext.find(".htab-wrapper .htab-link").click(function(e){
+    appContext.find('.htab-wrapper .htab-link').click(function(e){
         e.preventDefault();
         var el = $(this);
         var htabWrapper = el.parent().parent().parent();
-        var links = htabWrapper.find(".htab-link");
+        var links = htabWrapper.find('.htab-link');
         for(var i = 0; i < links.length; i++){
-            $(links[i]).parent().removeClass("active");
+            $(links[i]).parent().removeClass('active');
         }
-        el.parent().addClass("active");
-        var target = htabWrapper.find("" + this.getAttribute("data-target") + "");
-        htabWrapper.find(".htab-target").hide();
+        el.parent().addClass('active');
+        var target = htabWrapper.find(this.getAttribute('data-target'));
+        htabWrapper.find('.htab-target').hide();
         target.show();
     });
 
@@ -1168,14 +1225,14 @@
     var showDBType = function(){
         var checked = appContext.find('[name="appId"]:checked');
         var DBType = blastTypes[checked.val()].dbtype;
-        if(DBType == "nucl"){
-            appContext.find(".databases-panel .prot-wrapper").hide();
-            appContext.find(".databases-panel .nucl-wrapper").show().removeClass('col-md-6').addClass('col-md-12');
+        if(DBType === 'nucl'){
+            appContext.find('.databases-panel .prot-wrapper').hide();
+            appContext.find('.databases-panel .nucl-wrapper').show().removeClass('col-md-6').addClass('col-md-12');
         }else{
-            appContext.find(".databases-panel .nucl-wrapper").hide();
-            appContext.find(".databases-panel .prot-wrapper").show().removeClass('col-md-6').addClass('col-md-12');
+            appContext.find('.databases-panel .nucl-wrapper').hide();
+            appContext.find('.databases-panel .prot-wrapper').show().removeClass('col-md-6').addClass('col-md-12');
         }
-    }
+    };
     showDBType();
     appContext.find('[name="appId"]').change(showDBType);
   /* Initialize Agave */
@@ -1196,12 +1253,12 @@
   });
 
   /* function to remove/add collapsed class on panel title dropdown. In production the toggle function doesn't do this */
-  appContext.find("[data-toggle=collapse]").click(function(){
+  appContext.find('[data-toggle=collapse]').click(function(){
       var el = $(this);
-      if(el.hasClass("collapsed")){
-          el.removeClass("collapsed");
+      if(el.hasClass('collapsed')){
+          el.removeClass('collapsed');
       }else{
-          el.addClass("collapsed");
+          el.addClass('collapsed');
       }
   });
 
@@ -1451,7 +1508,7 @@
         e.preventDefault();
         $appContext = selectNearestFilebrowser($(this));
         var $button = $(this);
-        var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
+        //var fileIndex = parseInt($(e.currentTarget).closest('tr').attr('data-file-index'));
         $('.file-selected', $appContext.parent()).val('');
         $button.parent().find('button[name="select"]').removeClass('btn-success').addClass('btn-default');
         $('.help-select-filename', $appContext.parent()).text('');
