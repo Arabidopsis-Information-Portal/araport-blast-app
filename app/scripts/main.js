@@ -177,7 +177,7 @@
         };
         var ef = function(err){
             /*If a job is pending Agave.api.jobs.get({"jobId":"id"}) will return a 404.
-            This means that we can only now the status of the job using getStatus*/
+            This means that we can only know the status of the job using getStatus*/
             if(console){
                 console.log('Error getting job , let\'s try gettin just the status ', err);
             }
@@ -198,13 +198,12 @@
                     ef);
             }
         }
-        if(cnt === 0){
+        //if(cnt === 0){
             //clearInterval(BlastApp._jobListChecker);
-
-        }
+        //}
     };
 
-    BlastApp.showTooltip = function(el){
+    BlastApp.showInfoTr = function(el){
         var tr = el.parent().parent().parent();
         var id = tr[0].getAttribute('data-id');
         //var status = tr[0].getAttribute('data-status');
@@ -213,13 +212,14 @@
             infotr.remove();
             return;
         }
-        var span = $('.blast-history-meta span#' + id).clone();
+        //var span = $('.blast-history-meta span#' + id).clone();
         infotr = $('<tr id="blast-info-' + id + '">' + 
                         '<td colspan="6"></td>' + 
                    '</tr>');
-        infotr.find('td').append(span);
+        BlastApp.createSpanMetadata(id, infotr);
+        //infotr.find('td').append(span);
         tr.after(infotr);
-        span.removeClass('blast-hidden');
+        //span.removeClass('blast-hidden');
         /*
         if ( span.hasClass("blast-hidden") ){
             if(tr.offset().top < span.height()){
@@ -366,7 +366,7 @@
               '</a>');
         a.click(function(e){
             e.preventDefault();
-            BlastApp.showTooltip($(this));
+            BlastApp.showInfoTr($(this));
         });
         tdspan.append(a);
         tdspan.append('<br>');
@@ -406,7 +406,10 @@
         }
         var row = $('<tr data-status="' + job.status + '" data-id="' + job.id +'">' +
             '<td><span class="job-list-icon">' + icon + '</span>' +
-                 '<span class="job-list-status">' + job.status + '</san></td>' +
+                 '<span class="job-list-status">' + job.status + '</span>'+
+                 '<div class="progress">' +
+                 '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width:2em;">0%</div>' +
+                 '</div></td>' +
             '<td>' + job.name + '</td>' + 
             '<td>' + job.appId.split('-')[1] + '</td>' +
             '<td><span> ' + 
@@ -421,35 +424,88 @@
             '<span class="blast-history-download blast-result-link"></span></td>' +
             '<td><span class="blast-history-actions"></span></td>' +
             '</tr>');
+        var prog = BlastApp.jobLifecycle[job.status].prog;
+        row.find('.progress > .progress-bar')
+          .attr('aria-valuenow', prog)
+          .attr('style', 'min-width:2em; width:' + prog + '%;').text(prog + '%');
+        if (job.status === 'FINISHED'){
+            row.find('.progress').hide();
+            row.find('.job-list-icon').show();
+            row.find('.job-list-status').show();
+        }else{
+            row.find('.progress').show();
+            row.find('.job-list-icon').hide();
+            row.find('.job-list-status').hide();
+        }
         return row;
     };
 
-    BlastApp.createSpanMetadata = function(job){
+    BlastApp.createSpanMetadata = function(jobId, tr){
+        tr.find('td').html('<span class="loading">Loading... </span><span class="loading glyphicon glyphicon-refresh blast-reaload-icon></span>');
         var Agave = window.Agave;
         var jobDet, inputs, parameters;
-        Agave.api.jobs.get({jobId: job.id}, 
+        Agave.api.jobs.get({jobId: jobId}, 
             function(resp){
-                jobDet = resp.result;
+                //jshint -W069
+                tr.find('.loading').remove();
+                jobDet = resp.obj.result;
                 inputs = jobDet.inputs;
                 parameters = jobDet.parameters;
+                var span = '<div id=' + jobId + ' class="blast-tooltip-info">' +
+                '<p><b>Job Id:</b> ' + jobId + '</p>' +
+                '<div style="width:50%; float:left; overflow:auto;">' +
+                '<h5>Inputs</h5>' +
+                '<ul>' + 
+                  '<li><b>Query:</b></li>' + 
+                  '<li>' + (inputs.query ? inputs.query : '') + '</li>' + 
+                  '<li><b>Custom Database:</b></li>' + 
+                  '<li>' + (inputs.customDatabase ? inputs.customDatabse : '') + '</li>' + 
+                '</ul>'+
+                '</div>' + 
+                '<div style="width:50%; float:left; overflow:auto;">' +
+                '<h5>Parameters</h5>' + 
+                '<ul>' + 
+                  '<li><b>Blast Application:</b></li>' + 
+                  '<li>' + (parameters['blast_application'] ? parameters['blast_application'] : '') + '</li>' + 
+                  '<li><b>Database:</b></li>' + 
+                  '<li>' + (parameters.database ? parameters.database : '') + '</li>' + 
+                  '<li><b>Format:</b></li>' + 
+                  '<li>' + (parameters.format ? parameters.format : '') + '</li>' + 
+                  '<li><b>Gap Open:</b></li>' + 
+                  '<li>' + (parameters.gapopen ? parameters.gapopen : '') + '</li>' +
+                  '<li><b>Gap Extend:</b></li>' + 
+                  '<li>' + (parameters.gapextend ? parameters.gapextend : '') + '</li>' +  
+                  '<li><b>Penalty:</b></li>' + 
+                  '<li>' + (parameters.penalty ? parameters.penalty : '') + '</li>' +  
+                  '<li><b>Reward:</b></li>' + 
+                  '<li>' + (parameters.reward ? parameters.reward : '') + '</li>' +  
+                  '<li><b>Ungapped:</b></li>' + 
+                  '<li>' + (parameters.ungapped ? parameters.ungapped : '') + '</li>' +  
+                  '<li><b>Matrix:</b></li>' + 
+                  '<li>' + (parameters.matrix ? parameters.matrix : '') + '</li>' +  
+                  '<li><b>Evalue:</b></li>' + 
+                  '<li>' + (parameters.evalue ? parameters.evalue : '') + '</li>' +  
+                  '<li><b>Word Size:</b></li>' + 
+                  '<li>' + (parameters.wordsize ? parameters.wordsize : '') + '</li>' +  
+                  '<li><b>Max Target Seqs:</b></li>' + 
+                  '<li>' + (parameters['max_target_seqs'] ? parameters['max_target_seqs'] : '') + '</li>' +  
+                  '<li><b>Filter:</b></li>' + 
+                  '<li>' + (parameters.filter ? parameters.filter : '') + '</li>' +  
+                  '<li><b>Lowercase Masking:</b></li>' + 
+                  '<li>' + (parameters['lowercase_masking'] ? parameters['lowercase_masking'] : '') + '</li>' + 
+                '</ul>'+
+                '</div>' + 
+                '</div>';
+                //jshint +W069
+                tr.find('td').append($(span));
             },
             function(){
-                console.log('couldn\'t retrieve job ' + job.id);
+                console.log('couldn\'t retrieve job ' + jobId);
             });
-        var span = $('<span id=' + job.id + ' class="blast-hidden blast-tooltip-info">' +
-        '<ul>' +
-        '<li><b>Job Id: </b></li>' + 
-        '<li>' + job.id + '</li>' +
-        '<li><b>App Id: </b></li>' +
-        '<li>' + job.appId + '</li>' +
-        '</ul>' +
-        '</span>');
-        //var inputsul = $('<ul></ul>');
-        return span;
     };
 
-    BlastApp.printJobDetails =  function(job, jhc, jhm){
-        var span, archiveUrl, archive, row;
+    BlastApp.printJobDetails =  function(job, jhc){
+        var archiveUrl, archive, row;
         //Print info
         archiveUrl = job._links.archiveData.href;
         archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
@@ -463,9 +519,9 @@
 
         jhc.append(row);
 
-        span = BlastApp.createSpanMetadata(job);
+        //span = BlastApp.createSpanMetadata(job);
 
-        jhm.append(span);
+        //jhm.append(span);
     };
 
     BlastApp.filterBy = function(table, filter, coli, showPage){
@@ -917,7 +973,7 @@
                     }
                     var jhc = table.find('tbody');
                     jhc.html('');
-                    var jhm = appContext.find('.blast-history-meta');
+                    //var jhm = appContext.find('.blast-history-meta');
                     var job, i;
                     $('.blast-job-history-content .job-history-controls').html('');
                     BlastApp.printTableFilter(table, 
@@ -928,7 +984,7 @@
                         if(job.appId.indexOf('blas') < 0){
                             continue;
                         }
-                        BlastApp.printJobDetails(job, jhc, jhm);
+                        BlastApp.printJobDetails(job, jhc);
                     }
                     if(table.attr('data-filter')){
                         BlastApp.filterBy(table, table.attr('data-filter'), 1, false);
