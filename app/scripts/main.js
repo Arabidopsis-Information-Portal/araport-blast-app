@@ -455,44 +455,44 @@
                 '<p><b>Job Id:</b> ' + jobId + '</p>' +
                 '<div style="width:50%; float:left; overflow:auto;">' +
                 '<h5>Inputs</h5>' +
-                '<ul>' + 
-                  '<li><b>Query:</b></li>' + 
-                  '<li>' + (inputs.query ? inputs.query : '') + '</li>' + 
-                  '<li><b>Custom Database:</b></li>' + 
-                  '<li>' + (inputs.customDatabase ? inputs.customDatabse : '') + '</li>' + 
+                '<ul style="text-align:left;">' + 
+                  (inputs.query ? '<li><b>Query:</b> ' + inputs.query + '</li>' : '') + 
+                  (inputs.customDatabase ?
+                  '<li><b>Custom Database: ' + 
+                  inputs.customDatabse + '</li>' : '') + 
                 '</ul>'+
                 '</div>' + 
                 '<div style="width:50%; float:left; overflow:auto;">' +
                 '<h5>Parameters</h5>' + 
-                '<ul>' + 
-                  '<li><b>Blast Application:</b></li>' + 
-                  '<li>' + (parameters['blast_application'] ? parameters['blast_application'] : '') + '</li>' + 
-                  '<li><b>Database:</b></li>' + 
-                  '<li>' + (parameters.database ? parameters.database : '') + '</li>' + 
-                  '<li><b>Format:</b></li>' + 
-                  '<li>' + (parameters.format ? parameters.format : '') + '</li>' + 
-                  '<li><b>Gap Open:</b></li>' + 
-                  '<li>' + (parameters.gapopen ? parameters.gapopen : '') + '</li>' +
-                  '<li><b>Gap Extend:</b></li>' + 
-                  '<li>' + (parameters.gapextend ? parameters.gapextend : '') + '</li>' +  
-                  '<li><b>Penalty:</b></li>' + 
-                  '<li>' + (parameters.penalty ? parameters.penalty : '') + '</li>' +  
-                  '<li><b>Reward:</b></li>' + 
-                  '<li>' + (parameters.reward ? parameters.reward : '') + '</li>' +  
-                  '<li><b>Ungapped:</b></li>' + 
-                  '<li>' + (parameters.ungapped ? parameters.ungapped : '') + '</li>' +  
-                  '<li><b>Matrix:</b></li>' + 
-                  '<li>' + (parameters.matrix ? parameters.matrix : '') + '</li>' +  
-                  '<li><b>Evalue:</b></li>' + 
-                  '<li>' + (parameters.evalue ? parameters.evalue : '') + '</li>' +  
-                  '<li><b>Word Size:</b></li>' + 
-                  '<li>' + (parameters.wordsize ? parameters.wordsize : '') + '</li>' +  
-                  '<li><b>Max Target Seqs:</b></li>' + 
-                  '<li>' + (parameters['max_target_seqs'] ? parameters['max_target_seqs'] : '') + '</li>' +  
-                  '<li><b>Filter:</b></li>' + 
-                  '<li>' + (parameters.filter ? parameters.filter : '') + '</li>' +  
-                  '<li><b>Lowercase Masking:</b></li>' + 
-                  '<li>' + (parameters['lowercase_masking'] ? parameters['lowercase_masking'] : '') + '</li>' + 
+                '<ul style="text-align:left;">' + 
+                  (parameters['blast_application'] ? 
+                  '<li><b>Blast Application:</b> ' + parameters['blast_application'] + '</li>' : '') + 
+                  (parameters.database ? 
+                  '<li><b>Database:</b> ' + parameters.database + '</li>' : '') + 
+                  (parameters.format ? 
+                  '<li><b>Format:</b> '+ parameters.format + '</li>' : '') + 
+                  (parameters.gapopen ? 
+                  '<li><b>Gap Open:</b> ' + parameters.gapopen + '</li>' : '') +
+                  (parameters.gapextend ?
+                  '<li><b>Gap Extend:</b> ' + parameters.gapextend + '</li>' : '') +  
+                  (parameters.penalty ? 
+                  '<li><b>Penalty:</b> ' + parameters.penalty + '</li>' : '') +  
+                  (parameters.reward ? 
+                  '<li><b>Reward:</b> ' + parameters.reward + '</li>' : '') +  
+                  (parameters.ungapped ? 
+                  '<li><b>Ungapped:</b> ' + parameters.ungapped + '</li>' : '') +  
+                  (parameters.evalue ?
+                  '<li><b>Matrix:</b> ' + parameters.matrix + '</li>' : '') +  
+                  (parameters.evalue ? 
+                  '<li><b>Evalue:</b> ' + parameters.evalue + '</li>' : '') +  
+                  (parameters.wordsize ? 
+                  '<li><b>Word Size:</b> ' + parameters.wordsize + '</li>' : '') +  
+                  (parameters['max_target_seqs'] ? 
+                  '<li><b>Max Target Seqs:</b> ' + parameters['max_target_seqs'] + '</li>' : '') +  
+                  (parameters.filter ? 
+                  '<li><b>Filter:</b> ' + parameters.filter + '</li>' : '') +  
+                  (parameters['lowercase_masking'] ? 
+                  '<li><b>Lowercase Masking:</b> ' + parameters['lowercase_masking'] + '</li>' : '') + 
                 '</ul>'+
                 '</div>' + 
                 '</div>';
