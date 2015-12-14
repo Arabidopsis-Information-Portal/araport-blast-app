@@ -7,14 +7,14 @@
   <div class="blast-submit">
     <form role="form" action="/aip/apps/blast" method="post" id="araport-apps-form" accept-charset="UTF-8">
       <div class="form-group">
-        <label for="jobName">BLAST Job Name</label>
+        <label for="jobName">Name Your BLAST Job</label>
         <input type="text" id="jobName" name="jobName" class="form-control" value="%BLASTTYPE%-%DATESTAMP%"/>
         <p class="help-block">
-            Use this to have a more expressive name. You can use the <code>%BLASTTYPE%</code> and <code>%DATESTAMP%</code> variables which will be replaced by the blast type name and the unix date time stamp respectively.
+            Fill in this field to give your BLAST job a more expressive name. You can include the <code>%BLASTTYPE%</code> and <code>%DATESTAMP%</code> variables which will be replaced by the blast "type" and the current "time in seconds", respectively in the job name.
         </p>
       </div>
       <div class="form-group">
-        <label for="appId">Select Blast Type</label>
+        <label for="appId">Select a BLAST Program</label>
         <div class="btn-group btn-group-justified" data-toggle="buttons" style="width:100%;">
             <label class="btn btn-default active">
                 <input type="radio" name="appId" id="app-blastn" value="blastn" autocomplete="off" checked> blastn
@@ -34,7 +34,7 @@
         </div>
       </div>
       <div class="form-group htab-wrapper" style="width: 100%">
-        <label for="edit-sequence-input" style="width:100%;">Blast Input Sequence</label>
+        <label for="edit-sequence-input" style="width:100%;">Provide an Input Sequence</label>
         <div class="htabs-left">
             <div class="htab active">
                 <a class="htab-link" href="#" data-target="#paste-seq">Paste Sequence</a>
@@ -48,19 +48,19 @@
         </div>
         <div class="htabs-right">
           <div id="paste-seq" class="htab-target">
-              <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="File Name">
-              <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="8" placeholder="paste your sequence here"></textarea>
+              <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="Provide a file name...">
+              <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="8" placeholder="Paste your sequence here..."></textarea>
               <p class="help-block">
-                The sequence that is pasted here will be uploaded into a file in you araport file system under <code>blastplus/uploads/sequences</code> using the file name input value. It will have a unix timestamp appended at the end to avoid overwritting information.
+                Sequence data pasted here will be uploaded into your Araport Files under <code>blastplus/uploads/sequences</code>. The filename you provide will have a UNIX timestamp appended to avoid overwriting existing files.
               </p>
           </div>
           <div id="upload-seq" class="htab-target">
             <div class="white-background" style="height:214px; padding:10px;">
-                <input type="text" class="form-control" name="blast-sequence-upload-name" placeholder="File Name" style="float:right; width:50%;">
+                <input type="text" class="form-control" name="blast-sequence-upload-name" placeholder="Provide a file name (optional)..." style="float:right; width:50%;">
                 <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px;"/>
             </div>
             <p class="help-block">
-              The sequence file that you select will be uploaded into a file in your araport file system under <code>blastplus/uploads/sequences</code> usint the file name input value. It will have a unix timestamp appende at the end to avoid overwritting information.
+              This file will be uploaded into your Araport Files under <code>blastplus/uploads/sequences</code>. You may specify a new name for it. The filename will automatically have a UNIX timestamp appended to avoid overwriting existing files.
             </p>
           </div>
           <div id="select-seq" class="htab-target">
@@ -77,7 +77,7 @@
                   <form name="system-path">
                     <div class="form-group">
                       <select class="form-control" name="system">
-                        <option value="">Choose a system to browse</option>
+                        <option value="">Choose an Araport storage system to browse</option>
                       </select>
                     </div>
                     <div class="input-group attach-top">
@@ -102,44 +102,44 @@
                   </div>
                 </div>
             <p class="help-block">
-              Select a file to choose as an input by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file.
+              Select a file by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect the file. You may only have one file selected at a time.
               <br />
-              File currently selected: <code class="help-select-filename"></code>.
+              Currently selected: <code class="help-select-filename"></code>.
             </p>
             </div>
           </div>
         </div>
       </div>
       <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Databases</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Choose Public Databases to Query</div>
         <div class="panel-body databases-panel collapse in">
           <div class="row">
             <div class="col-md-6 nucl-wrapper">
-              <h4>Select Nucleotide DBs</h4>
+              <h4>Select Nucleotide databases</h4>
               <div class="form-group nucl"></div>
             </div>
             <div class="col-md-6 prot-wrapper">
-              <h4>Select Peptide DBs</h4>
+              <h4>Select Peptide databases</h4>
               <div class="form-group prot"></div>
             </div>
           </div>
         </div>
       </fieldset>
       <fieldset class="panel panel-default form-wrapper" id="custom-db">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".custom-databases-panel">Blast Custom DB</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".custom-databases-panel">Query Your Own Database</div>
         <div class="panel-body custom-databases-panel collapse htab-wrapper" style="width: 100%">
         <div class="htabs-left">
             <div class="htab active">
-                <a class="htab-link" href="#" data-target="#upload-db">Upload DB</a>
+                <a class="htab-link" href="#" data-target="#upload-db">Upload a FASTA file</a>
             </div>
             <div class="htab">
-                <a class="htab-link" href="#" data-target="#select-db">Select DB</a>
+                <a class="htab-link" href="#" data-target="#select-db">Select a FASTA file</a>
             </div>
         </div>
         <div class="htabs-right">
           <div id="upload-db" class="htab-target">
             <div class="white-background" style="height:214px">
-                <input type="text" class="form-control" name="blast-customdb-upload-name" placeholder="File Name" style="float:right; width:50%;">
+                <input type="text" class="form-control" name="blast-customdb-upload-name" placeholder="Provide a file name (optional)..." style="float:right; width:50%;">
                 <input type="file" name="blast-db-file" id="blast-db-file" style="margin-left:50px"/>
             </div>
           </div>
@@ -157,7 +157,7 @@
                   <form name="system-path">
                     <div class="form-group">
                       <select class="form-control" name="system">
-                        <option value="">Choose a system to browse</option>
+                        <option value="">Choose an Araport storage system to browse</option>
                       </select>
                     </div>
                     <div class="input-group attach-top">
@@ -182,9 +182,9 @@
                   </div>
                 </div>
             <p class="help-block">
-              Select a file to choose as an input by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file.
+              Select a file to choose by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file. You may have only one file selected at a time.
               <br />
-              File currently selected: <code class="help-select-filename"></code>.
+              Currently selected: <code class="help-select-filename"></code>.
             </p>
             </div>
           </div>
@@ -193,15 +193,15 @@
       </fieldset>     
       <fieldset title="Blast Options" class="panel panel-default form-wrapper blast-options">
         <div class="panel-title fieldest-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".blast-options-panel">
-          Blast Options
+          Configure Basic Blast Options
         </div>
         <div class="panel-body blast-options-panel collapse in">
           <div class="form-group">
             <label for="evalue">Expectation value (E) threshold for saving hits</label>
             <select id="evalue" class="form-control" title="Expectation">
-              <option value="0.0001">0.0001</option>
-              <option value="0.001">0.001</option>
-              <option value="0.01">0.01</option>
+              <option value="0.0001">10e-4</option>
+              <option value="0.001">10e-3</option>
+              <option value="0.01">10e-2</option>
               <option value="0.1">0.1</option>
               <option value="1">1</option>
               <option value="10" selected="true">10</option>
@@ -239,7 +239,7 @@
         </div>
       </fieldset>
       <fieldset title="Advanced Blast Options" class="panel panel-default form-wrapper advanced-blast-options">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Advanced Blast Options</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".advanced-options-panel">Configure Advanced Blast Options</div>
         <div class="panel-body advanced-options-panel collapse">
           <div class="form-group">
             <label for="gapopen">Cost to open a gap</label>
@@ -322,7 +322,7 @@
   <div class="blast-history-wrapper">
       <div class="panel panel-default blast-job-history-panel panel-info">
             <div class="panel-title panel-heading blast-panel-toggle collapsed" data-toggle="collapse" data-target=".job-history">
-            BLAST History
+            Access Your BLAST History
             </div>
             <div class="panel-body job-history collapse">
                 <div class="blast-job-history-content">
