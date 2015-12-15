@@ -165,7 +165,7 @@
                     var archiveUrl = job._links.archiveData.href;
                     archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
                     //jshint -W069
-                    var archive = archiveUrl + '/' + job.parameters['blast_application'] + '_out';
+                    var archive = archiveUrl + '/' + (job.parameters['blast_application'] ? job.parameters['blast_application'] : job.appId.split('-')[1]) + '_out';
                     //jshint +W069
                     BlastApp.createDownloadViewLink(job, ntr, archive);
                 }
@@ -414,7 +414,9 @@
                  '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width:2em;">0%</div>' +
                  '</div></td>' +
             '<td>' + job.name + '</td>' + 
-            '<td>' + job.appId.split('-')[1] + '</td>' +
+            //jshint -W069
+            '<td>' + (job.parameters['blast_application'] ? job.parameters['blast_application'] : job.appId.split('-')[1])  + '</td>' +
+            //jshint +W069
             '<td><span> ' + 
                    ((ds.getMonth() + 1) < 10 ? '0' + (+ds.getMonth() + 1) : (ds.getMonth() + 1)) +
                    '/' + (ds.getDate() < 10 ? '0' + ds.getDate() : ds.getDate()) + '/' +
@@ -428,9 +430,14 @@
             '<td><span class="blast-history-actions"></span></td>' +
             '</tr>');
         var prog = BlastApp.jobLifecycle[job.status].prog;
+        var label = BlastApp.jobLifecycle[job.status].desc;
         row.find('.progress > .progress-bar')
           .attr('aria-valuenow', prog)
-          .attr('style', 'min-width:2em; width:' + prog + '%;').text(prog + '%');
+          .attr('style', 'min-width:2em; width:' + prog + '%;').text(prog + '%')
+          .attr('data-toggle', 'tooltip')
+          .attr('data-placement', 'bottom')
+          .attr('title', label);
+          row.find('[data-toggle="tooltip"]').tooltip();
         if (job.status === 'FINISHED'){
             row.find('.progress').hide();
             row.find('.job-list-icon').show();
@@ -513,7 +520,7 @@
         archiveUrl = job._links.archiveData.href;
         archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
         //jshint -W069
-        archive = archiveUrl + '/' + job.parameters['blast_application'] + '_out';
+        archive = archiveUrl + '/' + (job.parameters['blast_application'] ? job.parameters['blast_application'] : job.appId.split('-')[1]) + '_out';
         //jshint +W069
         //var archive = archiveUrl + '/' + job.name + '.out';
         row = BlastApp.createRow(job);
@@ -564,7 +571,7 @@
             o = $('<option value="' + v.val + '">' + v.lbl + '</option>');
             select.append(o);
         }
-        select.change(function(){BlastApp.filterBy(table, $(this).val(), 1, true);});
+        select.change(function(){BlastApp.filterBy(table, $(this).val(), 2, true);});
         jhc.append(lbl);
         jhc.append(select);
     };
@@ -992,7 +999,7 @@
                         BlastApp.printJobDetails(job, jhc);
                     }
                     if(table.attr('data-filter')){
-                        BlastApp.filterBy(table, table.attr('data-filter'), 1, false);
+                        BlastApp.filterBy(table, table.attr('data-filter'), 2, false);
                     }
                     BlastApp.showPage(table, data.result.length, 10, 1, page);
                     //ul = BlastApp.buildPager(table, data.result, 10, page);
