@@ -164,7 +164,9 @@
                 if(BlastApp.finishedStates.indexOf(job.status) >= 0) {
                     var archiveUrl = job._links.archiveData.href;
                     archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
-                    var archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
+                    //jshint -W069
+                    var archive = archiveUrl + '/' + job.parameters['blast_application'] + '_out';
+                    //jshint +W069
                     BlastApp.createDownloadViewLink(job, ntr, archive);
                 }
                 BlastApp.createActionLinks(job, ntr);
@@ -278,6 +280,7 @@
         }
         var Agave = window.Agave;
         var outputData;
+
         Agave.api.files.download({'systemId': BLAST_CONFIG.archiveSystem, 'filePath': archive},
             function(output){
                 console.log(output);
@@ -509,7 +512,9 @@
         //Print info
         archiveUrl = job._links.archiveData.href;
         archiveUrl = archiveUrl.substring(archiveUrl.indexOf(BlastApp.username), archiveUrl.length);
-        archive = archiveUrl + '/' + job.appId.split('-')[1] + '_out';
+        //jshint -W069
+        archive = archiveUrl + '/' + job.parameters['blast_application'] + '_out';
+        //jshint +W069
         //var archive = archiveUrl + '/' + job.name + '.out';
         row = BlastApp.createRow(job);
 
@@ -888,7 +893,7 @@
                         BlastApp.jobError('Job status is ' + BlastApp.status);
                     } else if(BlastApp.finishedStates.indexOf(BlastApp.status) >=0) {
                         BlastApp.updateStatusIcon('success');
-                        BlastApp.jobFinished(json.obj.result);
+                        //BlastApp.jobFinished(json.obj.result);
                     } else {
                         console.log('unknown job state! =' + BlastApp.status);
                     }
@@ -960,8 +965,8 @@
         var Agave = window.Agave;
         //Agave.api.jobs.searchLikeAppId(
         //    {'appId.like':'*blast*'},
-        Agave.api.jobs.list(
-            null,
+        Agave.api.jobs.search(
+            {'queryParams': '{"appId.like": "ncbi-blast*"}', 'value': 'val', 'attribute': 'attr'},
             function(result){
                 var data = JSON.parse(result.data);
                 if(data.status === 'success'){
@@ -1023,7 +1028,7 @@
                     if(BlastApp.status === 'FINISHED') {
                         console.log('job immediately finished');
                         BlastApp.updateStatusIcon('success');
-                        BlastApp.jobFinished(jobResponse.obj.result);
+                        //BlastApp.jobFinished(jobResponse.obj.result);
                     } else { //more likely we need to poll the status
                         BlastApp.status = jobResponse.obj.result.status;
                         appContext.find('.job-status .job-status-message').html('Job Status is ' + BlastApp.status);
@@ -1196,7 +1201,7 @@
         //jshint -W069
         BLAST_CONFIG.parameters['blast_application'] = blastTypes[BlastApp.blastType].app;
         //jshint +W069
-        BlastApp.outputFile = BlastApp.username + '/archive/jobs/blast-' + BlastApp.now + '/' + BlastApp.blastType + '_out';
+        BlastApp.outputFile = BlastApp.username + '/' + BlastApp.mainFolder + '/archive/jobs/blast-' + BlastApp.now + '/%BLASTTYPE%_out';
 
         //Show job history
         appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');

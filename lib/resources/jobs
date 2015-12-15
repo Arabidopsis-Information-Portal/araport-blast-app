@@ -357,7 +357,7 @@
                             "allowMultiple": false,
                             "description": "The path to an output file relative to the job output directory. ",
                             "name": "filePath",
-                            "paramType": "path",
+                            "paramType": "query",
                             "required": false,
                             "type": "string"
                         }
@@ -377,16 +377,16 @@
                     "notes": "Search by combinations of attributes and values. The URL should be constructed with alternating attribute and value fields.",
                     "parameters": [
                         {
-                            "allowMultiple": true,
-                            "description": "The attribute to query by. This can be any job field.",
+                            "allowMultiple": false,
+                            "description": "Attribute.",
                             "name": "attribute",
                             "paramType": "path",
                             "required": true,
                             "type": "string"
                         },
                         {
-                            "allowMultiple": true,
-                            "description": "The value of the attribute to query for.",
+                            "allowMultiple": false,
+                            "description": "value",
                             "name": "value",
                             "paramType": "path",
                             "required": true,
@@ -397,7 +397,7 @@
                     "type": "MultipleJobResponse"
                 }
             ],
-            "path": "/jobs/v2/{attribute}/{value}"
+            "path": "/jobs/v2/search/{attribute}/{value}"
         }
     ],
     "basePath": "https://api.araport.org",
