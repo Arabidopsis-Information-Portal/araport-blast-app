@@ -203,12 +203,12 @@ module.exports = function(grunt) {
         'fileTypes':{
             'js':{
                 'depprop': 'scripts',
-                'depcwd': 'app/scripts/',
+                'depcwd': 'app/',
                 'replaceStr': '<script src="%filePath%"></script>'
             },
             'css':{
                 'depprop': 'styles',
-                'depcwd': 'app/styles/',
+                'depcwd': 'app/',
                 'replaceStr': '<link rel="stylesheet" href="%filePath%" />'
             },
             'html':{
