@@ -4,9 +4,9 @@
     "description": "Blast History plus job history",
     "html": "blast.html",
     "scripts": [
-                "main.js"
+                "scripts/main.js"
                 ],
     "styles": [
-                "main.css"
+                "styles/main.css"
             ]
 }
