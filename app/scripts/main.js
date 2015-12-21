@@ -861,9 +861,6 @@
                 );
                 BlastApp.databases = dbs;
                 localStorage.setItem('blastDBs', JSON.stringify({timestamp: new Date().getTime(), dbs: BlastApp.databases}));
-                BlastApp.databases.forEach(
-                        printDbs
-                    );
                 appContext.find('.nucl').html('<div data-toggle="buttons">' + nukes + '</div>');
                 appContext.find('.prot').html('<div data-toggle="buttons">' + peps + '</div>');
                 appContext.find('[name="blast-dbs"]').change(function(){
