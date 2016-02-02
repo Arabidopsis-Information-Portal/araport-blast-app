@@ -332,7 +332,7 @@
                     "type": "MultipleRemoteFileResponse"
                 }
             ],
-            "path": "/jobs/v2/{jobId}/ouputs/listings/{filePath}"
+            "path": "/jobs/v2/{jobId}/outputs/listings/{filePath}"
         },
         {
             "description": "Download an output file.",
@@ -366,7 +366,7 @@
                     "type": "JobOutputFileDownload"
                 }
             ],
-            "path": "/jobs/v2/{jobId}/ouputs/media/{filePath}"
+            "path": "/jobs/v2/{jobId}/outputs/media/{filePath}"
         },
         {
             "description": "Search for jobs matching given attribute/value combination(s).",

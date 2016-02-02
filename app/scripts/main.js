@@ -129,6 +129,7 @@
         var tbody = appContext.find('.blast-job-history-content table tbody')[0];
         var trs = tbody.rows;
         var tr, status, id, newStatus, td, icon, cnt;
+
         var sf = function(response){
             var data = JSON.parse(response.data);
             if(data.status === 'success'){
@@ -239,12 +240,57 @@
         */
     };
 
-    BlastApp.downloadArchivedResults = function(archive){
-        if(typeof archive === 'undefined'){
+    BlastApp.downloadArchivedResults = function(id){
+        if(typeof id === 'undefined'){
             return;
         }
         var Agave = window.Agave;
-        var outputData;
+        var outputData, files = [], output;
+        var re = /_out$/;
+
+        Agave.api.jobs.listOutputs({'jobId': id, 'filePath': '/'},
+            function(result){
+                if (result.status !== 200){
+                    BlastApp.jobError('Could not get resulting output file. ' + result.statusText);
+                    return;
+                }
+                files = result.obj.result;
+                files.forEach(function(element){
+                    if(re.test(element.name)){
+                        output = element;
+                        Agave.api.jobs.downloadOutput({'jobId': id, 'filePath': output.path},
+                            function(output){
+                                outputData = output.data;
+                                try{
+                                    var isFileSaverSupported = !!new Blob();
+                                    if(!isFileSaverSupported){
+                                        BlastApp.jobError('Sorry, your browser does not support this feature. Please upgrade to a modern browser.');
+                                    }
+                                } catch (e){
+                                    BlastApp.jobError('Sorry, your browser does not support this. Please upgrate to a moder browser.');
+                                    return;
+                                }
+                                if(typeof outputData === 'undefined'){
+                                    BlastApp.jobError('Could not download data.');
+                                }
+                                else{
+                                    var fileName = output.name + BLAST_CONFIG.parameters.format;
+                                    window.saveAs(new Blob([outputData]), fileName);
+                                }
+                            },
+                            function(err){
+                                BlastApp.jobError('There was an error downloading the result data. , ' + err);
+                                return;
+                            }
+                            );
+                    }
+                });
+            }, 
+            function(err){
+                BlastApp.jobError('Could not get resulting output file. ' + err);
+            }
+            );
+        /*
         Agave.api.files.download({'systemId':BLAST_CONFIG.archiveSystem,'filePath':archive},
             function(output) {
                 console.log(output);
@@ -272,9 +318,62 @@
                 BlastApp.jobError('Could not get resulting output file. ' + err);
             }
         );
+        */
     };
 
-    BlastApp.showArchivedResults = function(archive){
+    BlastApp.showArchivedResults = function(id){
+        if(typeof id === 'undefined'){
+            return;
+        }
+        var Agave = window.Agave;
+        var outputData, files = [], output;
+        var re = /_out$/;
+
+        Agave.api.jobs.listOutputs({'jobId': id, 'filePath': '/'},
+            function(result){
+                if (result.status !== 200){
+                    BlastApp.jobError('Could not get resulting output file. ' + result.statusText);
+                    return;
+                }
+                files = result.obj.result;
+                files.forEach(function(element){
+                    if(re.test(element.name)){
+                        output = element;
+                        Agave.api.jobs.downloadOutput({'jobId': id, 'filePath': output.path},
+                            function(output){
+                                outputData = output.data;
+                                
+                                var m = $('<div class="modal fade blast-output-modal">' +
+                                            '<div class="modal-dialog">' +
+                                              '<div class="modal-content">' +
+                                                '<div class="modal-header">' + 
+                                                  '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + 
+                                                  '<h4 class="modal-title">Data</h4>' + 
+                                                '</div>' + 
+                                                '<div class="modal-body">' + 
+                                                    outputData + 
+                                                '</div>' + 
+                                                '<div class="modal-footer">' + 
+                                                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' + 
+                                              '</div>' + 
+                                            '</div>' + 
+                                          '</div>');
+                                m.modal('toggle');
+                            },
+                            function(err){
+                                BlastApp.jobError('There was an error downloading the result data. , ' + err);
+                                return;
+                            }
+                            );
+                    }
+                });
+            }, 
+            function(err){
+                BlastApp.jobError('Could not get resulting output file. ' + err);
+            }
+            );
+
+        /*
         if(typeof archive === 'undefined'){
             return;
         }
@@ -312,6 +411,7 @@
                     console.log(err);
                 }
             });
+        */
     };
 
     BlastApp.manageJob = function(jobId, action){
@@ -384,14 +484,16 @@
         a = $('<a href="' + archive  + '"><span class="glyphicon glyphicon-save"></span> Download Results</a>');
         a.click(function(e){
             e.preventDefault(); 
-            BlastApp.downloadArchivedResults(this.getAttribute('href')); }
+            var el = $(this);
+            BlastApp.downloadArchivedResults(el.parent().parent().parent().attr('data-id')); }
             );
         tdspan.append(a);
         tdspan = row.find('.blast-history-view');
         a = $('<a href="' + archive + '"><span class="glyphicon glyphicon-eye-open"></span> View Results</a>');
         a.click(function(e){
             e.preventDefault();
-            BlastApp.showArchivedResults(this.getAttribute('href')); }
+            var el = $(this);
+            BlastApp.showArchivedResults(el.parent().parent().parent().attr('data-id')); }
             );
         tdspan.append(a);
     };
