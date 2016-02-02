@@ -1286,9 +1286,9 @@
         var name = appContext.find('#jobName').val();
         var now = new Date().getTime();
         BlastApp.now = now;
-        name = name.search(/%DATESTAMP%/) > -1 ? name.replace('%DATESTAMP%', now) : name + now;
+        name = name.indexOf(/%DATESTAMP%/) > -1 ? name.replace('%DATESTAMP%', now) : name + '-' + now;
         name = name.replace('%BLASTTYPE%', BlastApp.getUserAppId());
-        name = name.replace(/[^0-9A-Z\-_ a-z]+/, '-');
+        name = name.replace(/[^0-9A-Z\-_a-z]+/g, '-');
         if(console){
             console.log('Creating BLAST job: ' + name + ' ');
         }
