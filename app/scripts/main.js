@@ -377,6 +377,7 @@
                                     '</div>' + 
                                   '</div>');
                         m.modal('toggle');
+                        $(window).scrollTop(0, 'slow');
                     },
                     function(err){
                         BlastApp.jobError('There was an error downloading the result data. , ' + err);
@@ -1801,7 +1802,7 @@
 
   function downloadFile(file) {
     var promise = new Promise(function(resolve, reject) {
-      var req = Agave.api.files.download({systemId: file.system, filePath: file.path}, {mock: true});
+      var req = Agave.api.files.download({systemId: file.system, filePath: file.path.substr(1, file.path.length -1)}, {mock: true});
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (this.readyState === 4) {
@@ -1836,12 +1837,12 @@
 
   function previewFile(file) {
     var $preview = $('<div class="file-browser-app-preview loading"><div class="file-browser-app-preview-overlay"></div><div class="file-browser-app-preview-header container"><header><button type="button" data-dismiss="preview" class="btn btn-danger btn-sm pull-right">&times;</button><h4 class="file-browser-app-preview-title"></h4></header></div><div class="container file-browser-app-preview-item-wrapper"><div class="file-browser-app-preview-item"></div></div></div>');
-    $('body').append($preview);
+    //$('body').append($preview);
 
     $('.file-browser-app-preview-title', $preview).text(file.name);
 
     new Promise(function(resolve, reject) {
-      var req = Agave.api.files.download({systemId: file.system, filePath: file.path}, {mock: true});
+      var req = Agave.api.files.download({systemId: file.system, filePath: file.path.substr(1, file.path.length - 1)}, {mock: true});
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
         if (this.readyState === 4) {
@@ -1896,7 +1897,9 @@
       xhr.send();
     }).then(function() {
       $preview.removeClass('loading');
-      $('.file-browser-app-preview-overlay, [data-dismiss="preview"]', $preview).on('click', function() { $preview.remove(); });
+      $preview.modal('show');
+      $(window).scrollTop(0, 'slow');
+      //$('.file-browser-app-preview-overlay, [data-dismiss="preview"]', $preview).on('click', function() { $preview.remove(); });
     }, function(err) {
       $preview.remove();
       showAlert({ message: err.message, type: 'danger', autoDismiss: 5000 });
