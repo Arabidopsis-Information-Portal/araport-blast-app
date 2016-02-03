@@ -246,7 +246,7 @@
         }
         var Agave = window.Agave;
         var outputData, files = [], output;
-        var re = /_out$/;
+        var re = /[_\.]out$/;
 
         Agave.api.jobs.listOutputs({'jobId': id, 'filePath': '/'},
             function(result){
@@ -327,7 +327,7 @@
         }
         var Agave = window.Agave;
         var outputData, files = [], output;
-        var re = /_out$/;
+        var re = /[_\.]out$/;
 
         Agave.api.jobs.listOutputs({'jobId': id, 'filePath': '/'},
             function(result){
@@ -780,7 +780,57 @@
     };
 
     BlastApp.prepareFileSystem = function(Agave){
-        Agave.api.files.list({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder},
+        var paths = [BlastApp.mainFolder + '/' + BlastApp.uploadFolder,
+                     BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.sequencesFolder,
+                     BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.databasesFolder,
+                     BlastApp.mainFolder + '/' + BlastApp.archiveFolder,
+                     BlastApp.mainFolder + '/' + BlastApp.archiveFolder + '/' + BlastApp.jobsFolder];
+        var mkdir = function(path){
+            return new Promise(
+                function(resolve, reject){
+                    Agave.api.files.manage({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username,
+                        body: '{"action": "mkdir", "path": "' + path + '"}'},
+                        function(res){
+                            console.log('Error: ', res);
+                            resolve(res);
+                        },
+                        function(err){
+                            console.log('Error: ', err);
+                            reject(err);
+                        }
+                    );
+                }
+            );
+        };
+
+        var uploadPromise = mkdir(paths[0]);
+        var sequencesPromise = mkdir(paths[1]);
+        var databasesPromise = mkdir(paths[2]);
+        var archivePromise = mkdir(paths[3]);
+        var jobsPromise = mkdir(paths[4]);
+        uploadPromise.then(function(val){
+            console.log('Upload Promise created, ' + val);
+        })
+        .then(function(){
+            sequencesPromise.then(function(val){
+                console.log('Sequences Folder created ,' + val);
+            });
+        })
+        .then(function(){
+            databasesPromise.then(function(val){
+                console.log('Databases Folder created ,' + val);
+            });
+        });
+        archivePromise.then(function(val){
+            console.log('Archive Folder created, ' + val);
+        })
+        .then(function(){
+            jobsPromise.then(function(val){
+                console.log('Jobs Folder created, ' + val);
+            });
+        });
+        /* 
+        Agave.api.files.list({systemId: BLAST_CONFIG.archiveSystem, filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder},
             function(res){
                 if(console){
                     console.log(res);
@@ -840,7 +890,9 @@
                 });
             }
        });
-    };
+
+        */
+   };
 
     /*
     *
@@ -923,8 +975,7 @@
         }
         appContext.find('.nucl').html('<span class="glyphicon glyphicon-refresh blast-reload-icon"></span> Fetching available databases');
         var nukes = '', peps = '';
-        var printDbs = function(element, index, array){
-            console.log('Array: ', array);
+        var printDbs = function(element, index){
             index++;
             var dbstr = '<label class="btn btn-default db-button">' +
                         '<input type="checkbox" name="blast-dbs" value="' + element.filename + '" autocomplete="off">' + element.label + '</label>';
@@ -1072,6 +1123,7 @@
         console.log('Boo! Job is in an error state!', error);
         appContext.find('.blast-errors').html('<h3>Blast encountered an error</h3><p>' + error + '</p>');
         appContext.find('.blast-errors').removeClass('hidden');
+        $(window).scrollTop(0, 'slow');
     };
 
     //Retrieve a list of user's jobs. Will sort by status
@@ -1128,6 +1180,7 @@
 
     function submitBlastJob(Agave){
         Agave = window.Agave;
+        console.log('Job to submit: ', BLAST_CONFIG);
         Agave.api.jobs.submit({'body': JSON.stringify(BLAST_CONFIG)},
             function(jobResponse) { //success
                 console.log('Job Submitted.');
@@ -1160,9 +1213,9 @@
                 }
             } ,
             function(err) { //fail
-                //agave.api failed
+                //agave.api fail + d
                 console.log('Job did not successfully submit.', err);
-                BlastApp.jobError('Job did not successfully submit.', err);
+                BlastApp.jobError('Job did not successfully submit.' +  err.obj.message);
             }
         );
     }
@@ -1208,8 +1261,8 @@
                 //submit the job
                 submitBlastJob(Agave);
 
-            }, function() {
-                BlastApp.jobError('Could not upload file.');
+            }, function(err) {
+                BlastApp.jobError('Could not upload file.' + err.obj.message);
                 return false;
             }
         );
@@ -1251,7 +1304,7 @@
                 },
                 function(err){
                     console.log('Error uploading DB: ', err);
-                    BlastApp.jobError('There was an error uploading your DB, please try again');
+                    BlastApp.jobError('There was an error uploading your DB, please try again. ' + err.obj.message);
                 }
                 );
             } else {
