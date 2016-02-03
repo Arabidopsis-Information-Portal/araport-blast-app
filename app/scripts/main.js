@@ -1385,7 +1385,7 @@
         //jshint -W069
         BLAST_CONFIG.parameters['blast_application'] = blastTypes[BlastApp.blastType].app;
         //jshint +W069
-        BlastApp.outputFile = BlastApp.username + '/' + BlastApp.mainFolder + '/archive/jobs/blast-' + BlastApp.now + '/%BLASTTYPE%_out';
+        BlastApp.outputFile = BlastApp.username + '/' + BlastApp.mainFolder + '/archive/jobs/blast-' + BlastApp.now;
         BLAST_CONFIG.archivePath = BlastApp.outputFile;
         //Show job history
         appContext.find('.blast-job-history-panel .job-history-message').removeClass('hidden');
