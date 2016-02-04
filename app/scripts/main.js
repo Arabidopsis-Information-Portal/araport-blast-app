@@ -1836,8 +1836,21 @@
   }
 
   function previewFile(file) {
-    var $preview = $('<div class="file-browser-app-preview loading"><div class="file-browser-app-preview-overlay"></div><div class="file-browser-app-preview-header container"><header><button type="button" data-dismiss="preview" class="btn btn-danger btn-sm pull-right">&times;</button><h4 class="file-browser-app-preview-title"></h4></header></div><div class="container file-browser-app-preview-item-wrapper"><div class="file-browser-app-preview-item"></div></div></div>');
+    //var $preview = $('<div class="file-browser-app-preview loading"><div class="file-browser-app-preview-overlay"></div><div class="file-browser-app-preview-header container"><header><button type="button" data-dismiss="preview" class="btn btn-danger btn-sm pull-right">&times;</button><h4 class="file-browser-app-preview-title"></h4></header></div><div class="container file-browser-app-preview-item-wrapper"><div class="file-browser-app-preview-item"></div></div></div>');
     //$('body').append($preview);
+    var $preview  = $(
+            '<div class="modal fade file-browser-app-preview">' + 
+              '<div class="modal-dialog">' +
+                '<div class="modal-content">' +
+                  '<div class="modal-header">' +
+                    '<button type="button" class="close" data-dismiss="modal" arial-label="Close"></span aria-hidden="true">&times;</span></button>' +
+                    '<h4 class="modal-title">Data</h4>' +
+                  '</div>' +
+                  '<div class="modal-body file-browser-app-preview-item"></div>' +
+                  '<div class="modal-footer"></div>' +
+                '</div>' +
+              '</div>' +
+            '</div>');
 
     $('.file-browser-app-preview-title', $preview).text(file.name);
 
@@ -1857,7 +1870,7 @@
                 .on('load', function() {
                   URL.revokeObjectURL(blobUrl);
                 })
-                .appendTo('.file-browser-app-preview-item', $preview);
+                .appendTo($preview.find('.file-browser-app-preview-item'));
               $('.file-browser-app-preview-item', $preview).addClass('embed-responsive embed-responsive-4by3');
             } else if (file.mimeType.indexOf('image') === 0) {
               // img
@@ -1868,10 +1881,10 @@
                 .on('load', function() {
                   URL.revokeObjectURL(blobUrl);
                 })
-                .appendTo('.file-browser-app-preview-item', $preview);
+                .appendTo($preview.find('.file-browser-app-preview-item'));
             } else {
               // text
-              $('<pre>').appendTo('.file-browser-app-preview-item', $preview).text(this.response);
+              $('<pre>').text(this.response).appendTo($preview.find('.file-browser-app-preview-item'));
             }
             resolve(true);
           } else {
@@ -1901,7 +1914,7 @@
       $(window).scrollTop(0, 'slow');
       //$('.file-browser-app-preview-overlay, [data-dismiss="preview"]', $preview).on('click', function() { $preview.remove(); });
     }, function(err) {
-      $preview.remove();
+      //$preview.remove();
       showAlert({ message: err.message, type: 'danger', autoDismiss: 5000 });
     });
   }
