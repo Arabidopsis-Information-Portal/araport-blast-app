@@ -10,7 +10,7 @@
         <label for="jobName">Name Your BLAST Job</label>
         <input type="text" id="jobName" name="jobName" class="form-control" value=""/>
         <p class="help-block">
-            Fill in this field to give your BLAST job a more expressive name. You can include the <code>%BLASTTYPE%</code> and <code>%DATESTAMP%</code> variables which will be replaced by the blast "type" and the current "time in seconds", respectively in the job name.
+            Fill in this field to give your BLAST run a more expressive name. Otherwise, 
         </p>
       </div>
       <div class="form-group">
@@ -37,13 +37,13 @@
         <label for="edit-sequence-input" style="width:100%;">Provide an Input Sequence</label>
         <div class="htabs-left">
             <div class="htab active">
-                <a class="htab-link" href="#" data-target="#paste-seq">Paste Sequence</a>
+                <a class="htab-link" href="#" data-target="#paste-seq">Paste FASTA Sequence</a>
             </div>
             <div class="htab">
-                <a class="htab-link" href="#" data-target="#upload-seq">Upload Sequence</a>
+                <a class="htab-link" href="#" data-target="#upload-seq">Upload FASTA Sequence File</a>
             </div>
             <div class="htab">
-                <a class="htab-link" href="#" data-target="#select-seq">Select Sequence</a>
+                <a class="htab-link" href="#" data-target="#select-seq">Select FASTA Sequence File</a>
             </div>
         </div>
         <div class="htabs-right">
@@ -51,7 +51,7 @@
               <input type="text" class="form-control" name="blast-paste-sequence-name" placeholder="Provide a file name...">
               <textarea class="form-control form-textarea required" id="edit-sequence-input" name="sequence_input" cols="60" rows="8" placeholder="Paste your sequence here..."></textarea>
               <p class="help-block">
-                Sequence data pasted here will be uploaded into your Araport Files under <code>blastplus/uploads/sequences</code>. The filename you provide will have a UNIX timestamp appended to avoid overwriting existing files.
+                Sequence data pasted here will be uploaded to your <b>Araport Files</b> under <code>blastplus/uploads/sequences</code>. The filename you provide will have a UNIX timestamp appended to avoid overwriting existing files.
               </p>
           </div>
           <div id="upload-seq" class="htab-target">
@@ -60,7 +60,7 @@
                 <input type="file" name="blast-sequence-file" id="blast-sequence-file" style="margin-left:50px;"/>
             </div>
             <p class="help-block">
-              This file will be uploaded into your Araport Files under <code>blastplus/uploads/sequences</code>. You may specify a new name for it. The filename will automatically have a UNIX timestamp appended to avoid overwriting existing files.
+              This file will be uploaded to your <b>Araport Files</b> under <code>blastplus/uploads/sequences</code>. You may specify a new name for it. The filename will automatically have a UNIX timestamp appended to avoid overwriting existing files.
             </p>
           </div>
           <div id="select-seq" class="htab-target">
@@ -77,7 +77,7 @@
                   <form name="system-path">
                     <div class="form-group">
                       <select class="form-control" name="system">
-                        <option value="">Choose an Araport storage system to browse</option>
+                        <option value="">Choose an Araport Filesystem to browse</option>
                       </select>
                     </div>
                     <div class="input-group attach-top">
@@ -102,7 +102,7 @@
                   </div>
                 </div>
             <p class="help-block">
-              Select a file by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect the file. You may only have one file selected at a time.
+              Select a FASTA file by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect the file. You may only have one file selected at a time.
               <br />
               Currently selected: <code class="help-select-filename"></code>.
             </p>
@@ -111,22 +111,22 @@
         </div>
       </div>
       <fieldset class="panel panel-default form-wrapper" id="edit-dbs">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Choose Public Databases to Query</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".databases-panel">Choose Public BLAST Databases to Query</div>
         <div class="panel-body databases-panel collapse in">
           <div class="row">
             <div class="col-md-6 nucl-wrapper">
-              <h4>Select Nucleotide databases</h4>
+              <h4>Select one or more Nucleotide databases</h4>
               <div class="form-group nucl"></div>
             </div>
             <div class="col-md-6 prot-wrapper">
-              <h4>Select Peptide databases</h4>
+              <h4>Select one or more Peptide databases</h4>
               <div class="form-group prot"></div>
             </div>
           </div>
         </div>
       </fieldset>
       <fieldset class="panel panel-default form-wrapper" id="custom-db">
-        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".custom-databases-panel">Query Your Own Database</div>
+        <div class="panel-title fieldset-legend panel-heading blast-panel-toggle" data-toggle="collapse" data-target=".custom-databases-panel">BLAST Against Your Own Sequence Database</div>
         <div class="panel-body custom-databases-panel collapse htab-wrapper" style="width: 100%">
         <div class="htabs-left">
             <div class="htab active">
@@ -182,7 +182,7 @@
                   </div>
                 </div>
             <p class="help-block">
-              Select a file to choose by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file. You may have only one file selected at a time.
+              Select a FASTA file to choose by clicking on the <span class="glyphicon glyphicon-check"></span> icon. Click the <span class="glyphicon glyphicon-unchecked"></span> icon to unselect a file. You may have only one file selected at a time.
               <br />
               Currently selected: <code class="help-select-filename"></code>.
             </p>
@@ -222,9 +222,8 @@
           <div class="form-group">
             <label for="max_target_seqs">Maximum number of aligned sequences to keep</label>
             <input type="text" id="max_target_seqs" class="form-control" value="500"></input>
-            <p class="help-block">Not valid for outformat <=4</p>
           </div>
-          <div class="form-group">
+          <div class="form-group hidden">
             <label for="format">Format</label>
             <select id="format" class="form-control" title="Format">
               <option value="HTML" selected="true">HTML</option>
