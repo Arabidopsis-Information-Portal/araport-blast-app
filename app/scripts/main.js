@@ -994,7 +994,7 @@
         var nukes = '', peps = '';
         var printDbs = function(element, index){
             index++;
-            var dbstr = '<label class="btn btn-default db-button">' +
+            var dbstr = '<label class="db-button">' +
                         '<input type="checkbox" name="blast-dbs" value="' + element.filename + '" autocomplete="off">' + element.label + '</label>';
             if(element.dbtype === 'nucl'){
                 nukes += dbstr;
@@ -1031,8 +1031,8 @@
                 );
                 BlastApp.databases = dbs;
                 localStorage.setItem('blastDBs', JSON.stringify({timestamp: new Date().getTime(), dbs: BlastApp.databases}));
-                appContext.find('.nucl').html('<div data-toggle="buttons">' + nukes + '</div>');
-                appContext.find('.prot').html('<div data-toggle="buttons">' + peps + '</div>');
+                appContext.find('.nucl').html('<div>' + nukes + '</div>');
+                appContext.find('.prot').html('<div>' + peps + '</div>');
                 appContext.find('[name="blast-dbs"]').change(function(){
                     BlastApp.enableRunButton();
                 });
@@ -1045,8 +1045,8 @@
             BlastApp.databases.forEach(
                     printDbs
                 );
-            appContext.find('.nucl').html('<div data-toggle="buttons">' + nukes + '</div>');
-            appContext.find('.prot').html('<div data-toggle="buttons">' + peps + '</div>');
+            appContext.find('.nucl').html('<div>' + nukes + '</div>');
+            appContext.find('.prot').html('<div>' + peps + '</div>');
             appContext.find('[name="blast-dbs"]').change(function(){
                 BlastApp.enableRunButton();
             });

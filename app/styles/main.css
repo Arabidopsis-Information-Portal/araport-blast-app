@@ -188,6 +188,15 @@ table.table tbody .blaster-pager-row td{
     hyphens: auto;
     display:inline-block;
     white-space: normal;
+    border:1px solid #ddd;
+    font-weight:normal;
+    padding:6px 12px;
+    vertical-align:middle;
+    border-radius:2px;
+}
+
+.db-button input {
+    margin:5px;
 }
 
 .file-browser {
