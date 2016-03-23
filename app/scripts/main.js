@@ -1248,18 +1248,23 @@
         if(sequencePaste.length > 10 || sequenceFiles.length > 0 || sFilesSel.length > 5){
           if(sequencePaste.length > 10){
             blob = new Blob([$('#edit-sequence-input').val()], {type: 'text/plain'});
-            inputFileName = $('[name="blast-paste-sequence-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+            inputFileName = $('[name="blast-paste-sequence-name"]').val().replace(/[^0-9A-Z\-_a-z]+/g, '-');
+            inputFileName = inputFileName + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
           }else if (sequenceFiles.length > 0){
             sFile = sequenceFiles[0];
             blob = sFile;
-            inputFileName = $('[name="blast-sequence-upload-name"]').val() + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
+            inputFileName = $('[name="blast-sequence-upload-name"]').val().replace(/[^0-9A-Z\-_a-z]+/g, '-');
+            if(inputFileName && inputFileName.length > 1){
+                inputFileName = sFile.name.replace(/[^0-9A-Z\-_a-z]+/g, '-');
+            }
+            inputFileName = inputFileName + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
           }else {
             upload = false;
             BLAST_CONFIG.inputs.query = 'agave://araport-storage-00' + appContext.find('[name="sequence-file-selected"]').val();
           }
           if(upload){
             console.log('uploading ' + inputFileName);
-            formData.append('fileToUpload',blob,inputFileName);
+            formData.append('fileToUpload',inputFileName);
 
             Agave.api.files.importData(
             {systemId: BLAST_CONFIG.archiveSystem , filePath: BlastApp.username + '/' + BlastApp.mainFolder + '/' + BlastApp.uploadFolder + '/' + BlastApp.sequencesFolder, fileToUpload: blob, fileName: inputFileName},
