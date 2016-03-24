@@ -1255,6 +1255,8 @@
             blob = sFile;
             inputFileName = $('[name="blast-sequence-upload-name"]').val().replace(/[^0-9A-Z\-_a-z]+/g, '-');
             if(inputFileName && inputFileName.length > 1){
+                inputFileName = inputFileName.replace(/[^0-9A-Z\-_a-z]+/g, '-');
+            }else{
                 inputFileName = sFile.name.replace(/[^0-9A-Z\-_a-z]+/g, '-');
             }
             inputFileName = inputFileName + '_' + BlastApp.blastType + '-' +  BlastApp.now + '.txt';
